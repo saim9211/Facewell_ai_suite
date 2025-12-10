@@ -154,7 +154,7 @@ class SignupActivity : AppCompatActivity() {
                             "email" to (user?.email ?: ""),
                             "provider" to "google",
                             "createdAt" to System.currentTimeMillis(),
-                            "stage" to 0
+                            "stage" to 0,
                         )
                         user?.displayName?.let { payload["name"] = it }
                         user?.photoUrl?.toString()?.let { payload["photoUrl"] = it }

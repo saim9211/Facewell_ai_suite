@@ -55,6 +55,7 @@ class EditProfileFragment : Fragment(R.layout.fragment_edit_profile) {
 
     private var user: UserProfile? = null
     private var selectedAvatar: String = "ic_profile"
+    private var canEditAvatar: Boolean = true   // only true when userType == "user"
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -84,15 +85,16 @@ class EditProfileFragment : Fragment(R.layout.fragment_edit_profile) {
                     .addOnSuccessListener { doc ->
                         val fetched = UserProfile(
                             uid = uid,
+                            email = auth.currentUser?.email ?: (doc.getString("email") ?: ""),
+                            phone = doc.getString("phone") ?: "",
+                            userType = doc.getString("userType"),
+                            stage = (doc.getLong("stage") ?: 0L).toInt(),
                             firstName = doc.getString("firstName") ?: "",
                             lastName  = doc.getString("lastName") ?: "",
                             city      = doc.getString("city") ?: "",
                             dob       = doc.getString("dob") ?: "",
-                            gender    = doc.getString("gender") ?: "",
-                            email     = auth.currentUser?.email ?: (doc.getString("email") ?: ""),
-                            phone     = doc.getString("phone") ?: "",
-                            avatar    = doc.getString("avatar") ?: "ic_profile",
-                            stage     = (doc.getLong("stage") ?: 0L).toInt()
+                            gender    = doc.getString("gender"),
+                            avatarUrl = doc.getString("avatar") ?: "ic_profile"
                         )
                         user = fetched
                         populateFields(fetched)
@@ -140,9 +142,15 @@ class EditProfileFragment : Fragment(R.layout.fragment_edit_profile) {
     }
 
     private fun wireAvatarPopup() {
-        cardAvatar.setOnClickListener { showAvatarPicker(true) }
-        view?.findViewById<View>(R.id.badgeEdit)?.setOnClickListener { showAvatarPicker(true) }
-        view?.findViewById<View>(R.id.btnClosePicker)?.setOnClickListener { showAvatarPicker(false) }
+        cardAvatar.setOnClickListener {
+            if (canEditAvatar) showAvatarPicker(true)
+        }
+        view?.findViewById<View>(R.id.badgeEdit)?.setOnClickListener {
+            if (canEditAvatar) showAvatarPicker(true)
+        }
+        view?.findViewById<View>(R.id.btnClosePicker)?.setOnClickListener {
+            showAvatarPicker(false)
+        }
 
         avatarOverlay.setOnClickListener { showAvatarPicker(false) }
         dialogAvatar.setOnClickListener { /* consume */ }
@@ -167,15 +175,23 @@ class EditProfileFragment : Fragment(R.layout.fragment_edit_profile) {
     }
 
     private fun populateFields(u: UserProfile) {
-        etFirst.setText(u.firstName)
-        etLast.setText(u.lastName)
-        etEmail.setText(u.email)
-        etPhone.setText(u.phone)
-        etCity.setText(u.city, false)
+        // allow avatar only for user type
+        canEditAvatar = (u.userType == null || u.userType == "user")
+        if (!canEditAvatar) {
+            cardAvatar.visibility = View.GONE
+            view?.findViewById<View>(R.id.badgeEdit)?.visibility = View.GONE
+            avatarOverlay.visibility = View.GONE
+        }
 
-        selectedAvatar = u.avatar
+        etFirst.setText(u.firstName ?: "")
+        etLast.setText(u.lastName ?: "")
+        etEmail.setText(u.email ?: "")
+        etPhone.setText(u.phone ?: "")
+        etCity.setText(u.city ?: "", false)
+
+        selectedAvatar = u.avatarUrl ?: "ic_profile"
         ivAvatar.setImageResource(
-            when (u.avatar) {
+            when (u.avatarUrl) {
                 "avatar1" -> R.drawable.avatar1
                 "avatar2" -> R.drawable.avatar2
                 "avatar3" -> R.drawable.avatar3
@@ -184,21 +200,30 @@ class EditProfileFragment : Fragment(R.layout.fragment_edit_profile) {
             }
         )
 
-        if (u.dob.length >= 10 && u.dob.contains("-")) {
-            val parts = u.dob.split("-")
+        val dobStr = u.dob ?: ""
+        if (dobStr.length >= 10 && dobStr.contains("-")) {
+            val parts = dobStr.split("-")
             if (parts.size == 3) {
-                etYear.setText(parts[0]); etMonth.setText(parts[1]); etDay.setText(parts[2])
+                etYear.setText(parts[0])
+                etMonth.setText(parts[1])
+                etDay.setText(parts[2])
             }
         }
-        val displayGender = when (u.gender.lowercase()) {
+
+        val g = u.gender ?: ""
+        val displayGender = when (g.lowercase()) {
             "male" -> "Male"
             "female" -> "Female"
-            else -> u.gender.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+            else -> if (g.isBlank()) "" else g.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
         }
         etGender.setText(displayGender, false)
     }
 
     private fun showAvatarPicker(show: Boolean) {
+        if (!canEditAvatar) {
+            avatarOverlay.visibility = View.GONE
+            return
+        }
         avatarOverlay.visibility = if (show) View.VISIBLE else View.GONE
     }
 
@@ -226,28 +251,47 @@ class EditProfileFragment : Fragment(R.layout.fragment_edit_profile) {
 
         if (first.isEmpty() || last.isEmpty() || city.isEmpty()
             || year.length != 4 || month.isEmpty() || day.isEmpty()
-        ) { Toast.makeText(requireContext(), "Please complete all required fields.", Toast.LENGTH_SHORT).show(); return }
+        ) {
+            Toast.makeText(requireContext(), "Please complete all required fields.", Toast.LENGTH_SHORT).show()
+            return
+        }
 
-        val y = year.toIntOrNull(); val m = month.toIntOrNull(); val d = day.toIntOrNull()
+        val y = year.toIntOrNull()
+        val m = month.toIntOrNull()
+        val d = day.toIntOrNull()
         val nowYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
-        if (y == null || y < 1900 || y > nowYear) { Toast.makeText(requireContext(), "Enter a valid year.", Toast.LENGTH_SHORT).show(); return }
-        if (m == null || m !in 1..12)             { Toast.makeText(requireContext(), "Enter a valid month.", Toast.LENGTH_SHORT).show(); return }
-        if (d == null || d !in 1..31)             { Toast.makeText(requireContext(), "Enter a valid day.",   Toast.LENGTH_SHORT).show(); return }
+        if (y == null || y < 1900 || y > nowYear) {
+            Toast.makeText(requireContext(), "Enter a valid year.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (m == null || m !in 1..12) {
+            Toast.makeText(requireContext(), "Enter a valid month.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (d == null || d !in 1..31) {
+            Toast.makeText(requireContext(), "Enter a valid day.", Toast.LENGTH_SHORT).show()
+            return
+        }
 
         val dob = String.format("%04d-%02d-%02d", y, m, d)
 
         showSaving(true)
 
-        val payload = mapOf(
+        val payload = mutableMapOf<String, Any>(
             "firstName" to first,
             "lastName"  to last,
             "city"      to city,
             "dob"       to dob,
             "gender"    to genderStore,
             "phone"     to phone,
-            "avatar"    to selectedAvatar,
             "profileUpdatedAt" to System.currentTimeMillis()
         )
+
+        // Only users have avatar; vendor/clinic skip this
+        val userType = user?.userType
+        if (userType == null || userType == "user") {
+            payload["avatar"] = selectedAvatar
+        }
 
         db.collection("users").document(uid)
             .set(payload, SetOptions.merge())
@@ -260,9 +304,7 @@ class EditProfileFragment : Fragment(R.layout.fragment_edit_profile) {
 
                 // 3) Close this overlay/fragment
                 val fm = parentFragmentManager
-                // popBackStackImmediate avoids animation delay (instant return)
                 if (!fm.popBackStackImmediate()) {
-                    // Fallback to back press if not on back stack
                     requireActivity().onBackPressedDispatcher.onBackPressed()
                 }
             }
@@ -275,7 +317,7 @@ class EditProfileFragment : Fragment(R.layout.fragment_edit_profile) {
     private fun showSaving(saving: Boolean) {
         loadingOverlay.visibility = if (saving) View.VISIBLE else View.GONE
         btnSave.isEnabled = !saving
-        cardAvatar.isEnabled = !saving
-        view?.findViewById<View>(R.id.badgeEdit)?.isEnabled = !saving
+        cardAvatar.isEnabled = !saving && canEditAvatar
+        view?.findViewById<View>(R.id.badgeEdit)?.isEnabled = !saving && canEditAvatar
     }
 }

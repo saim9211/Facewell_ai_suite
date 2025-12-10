@@ -19,8 +19,8 @@
         android:maxSdkVersion="32" />
 
     <application
-        android:allowBackup="true"
         android:name=".MyApp"
+        android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -29,6 +29,24 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FYP"
         tools:targetApi="31">
+        <activity
+            android:name=".VendorCreateProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ClinicProfileFragment"
+            android:exported="false" />
+        <activity
+            android:name=".ClinicDashboardFragment"
+            android:exported="false" />
+        <activity
+            android:name=".ClinicMainActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ClinicCreateProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".SelectUserTypeActivity"
+            android:exported="false" />
         <activity
             android:name=".FullFaceReportActivity"
             android:exported="false" />

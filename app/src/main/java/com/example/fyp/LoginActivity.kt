@@ -229,41 +229,88 @@ class LoginActivity : AppCompatActivity() {
     // --- Stage-based routing ---
     private fun goNextByStage() {
         val uid = auth.currentUser?.uid
-        if (uid == null) { showLoading(false); return }
+        if (uid == null) {
+            showLoading(false)
+            return
+        }
 
         db.collection("users").document(uid)
             .get()
             .addOnSuccessListener { doc ->
-                val stage = if (doc.exists()) (doc.getLong("stage") ?: 0L).toInt() else 0
+                if (!doc.exists()) {
+                    showLoading(false)
+                    Toast.makeText(this, "Profile not found.", Toast.LENGTH_LONG).show()
+                    return@addOnSuccessListener
+                }
 
-                when {
-                    stage <= 0 -> {
-                        startActivity(Intent(this, CreateProfileActivity::class.java).apply {
-                            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-                        })
+                val stage   = (doc.getLong("stage") ?: 0L).toInt()
+                val userType = doc.getString("userType") ?: ""   // "", "user", "vendor", "clinic"
+                val gender  = doc.getString("gender")            // may be null
+                val firstName = doc.getString("firstName") ?: ""
+
+                val next = when {
+                    // 1) userType not chosen yet → go to user-type selection screen
+                    userType.isBlank() -> {
+                        Intent(this, SelectUserTypeActivity::class.java)
                     }
-                    stage == 1 -> {
-                        val firstName = doc.getString("firstName") ?: ""
-                        startActivity(Intent(this, SelectGenderActivity::class.java).apply {
+
+                    // 2) NORMAL USER FLOW
+                    userType == "user" && stage <= 0 -> {
+                        // No profile yet
+                        Intent(this, CreateProfileActivity::class.java)
+                    }
+
+                    // stage == 1 OR gender still null/empty → force gender screen
+                    userType == "user" && (stage == 1 || gender.isNullOrBlank()) -> {
+                        Intent(this, SelectGenderActivity::class.java).apply {
                             putExtra("firstName", firstName)
-                            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-                        })
+                        }
                     }
+
+                    // user completed everything → main user app
+                    userType == "user" -> {
+                        Intent(this, MainActivity::class.java)
+                    }
+
+                    // 3) VENDOR FLOW
+//                    userType == "vendor" && stage <= 0 -> {
+//                        // create vendor profile
+//                        Intent(this, VendorProfileActivity::class.java)
+//                    }
+
+//                    userType == "vendor" -> {
+//                        // vendor dashboard
+//                        Intent(this, VendorMainActivity::class.java)
+//                    }
+
+                    // 4) CLINIC FLOW
+//                    userType == "clinic" && stage <= 0 -> {
+//                        Intent(this, ClinicProfileActivity::class.java)
+//                    }
+
+//                    userType == "clinic" -> {
+//                        Intent(this, ClinicMainActivity::class.java)
+//                    }
+
+                    // fallback
                     else -> {
-                        startActivity(Intent(this, MainActivity::class.java).apply {
-                            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-                        })
+                        Intent(this, SelectUserTypeActivity::class.java)
                     }
                 }
+
+                next.addFlags(
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                            Intent.FLAG_ACTIVITY_NEW_TASK
+                )
+                startActivity(next)
                 finish()
             }
             .addOnFailureListener {
-                startActivity(Intent(this, CreateProfileActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-                })
-                finish()
+                showLoading(false)
+                Toast.makeText(this, "Could not load profile. Try again.", Toast.LENGTH_LONG).show()
             }
     }
+
 
     // --- Helpers ---
     private fun setupLiveValidation() {

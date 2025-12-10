@@ -70,7 +70,7 @@ class ProfileFragment : Fragment(R.layout.activity_profile_fragment) {
         tvDob    = view.findViewById(R.id.tvDob)
         tvGender = view.findViewById(R.id.tvGender)
         ivAvatar = view.findViewById(R.id.ivAvatar)
-        btnToggleLocation = view.findViewById(R.id.btnToggleLocation)
+//        btnToggleLocation = view.findViewById(R.id.btnToggleLocation)
 
         // NEW EDIT BUTTON -> open the standalone EditProfileActivity
         view.findViewById<View>(R.id.btnEditProfile).setOnClickListener {
@@ -100,29 +100,29 @@ class ProfileFragment : Fragment(R.layout.activity_profile_fragment) {
         }
 
         // Toggle location button handling
-        btnToggleLocation.setOnClickListener {
-            val uid = auth.currentUser?.uid ?: return@setOnClickListener
-            // Check current state: if user doc has location -> disabling, else enabling
-            val hasLocation = try {
-                val map = currentUserData
-                map != null && map.containsKey("location_lat") // not guaranteed; fallback below
-            } catch (_: Exception) { false }
-
-            // Better: fetch fresh doc to be certain
-            db.collection("users").document(uid).get().addOnSuccessListener { doc ->
-                val locObj = doc.get("location")
-                if (locObj == null) {
-                    // enable location flow -> request permission then fetch
-                    requestLocationPermissionOrFetch()
-                } else {
-                    // disable location flow -> remove field
-                    confirmAndRemoveLocation()
-                }
-            }.addOnFailureListener {
-                // fallback: try permission path
-                requestLocationPermissionOrFetch()
-            }
-        }
+//        btnToggleLocation.setOnClickListener {
+//            val uid = auth.currentUser?.uid ?: return@setOnClickListener
+//            // Check current state: if user doc has location -> disabling, else enabling
+//            val hasLocation = try {
+//                val map = currentUserData
+//                map != null && map.containsKey("location_lat") // not guaranteed; fallback below
+//            } catch (_: Exception) { false }
+//
+//            // Better: fetch fresh doc to be certain
+//            db.collection("users").document(uid).get().addOnSuccessListener { doc ->
+//                val locObj = doc.get("location")
+//                if (locObj == null) {
+//                    // enable location flow -> request permission then fetch
+//                    requestLocationPermissionOrFetch()
+//                } else {
+//                    // disable location flow -> remove field
+//                    confirmAndRemoveLocation()
+//                }
+//            }.addOnFailureListener {
+//                // fallback: try permission path
+//                requestLocationPermissionOrFetch()
+//            }
+//        }
 
         fetchUser()
     }
@@ -324,16 +324,16 @@ class ProfileFragment : Fragment(R.layout.activity_profile_fragment) {
 
         // Update toggle button text based on presence of location
         val hasLocation = !(data["location_lat"].isNullOrBlank() || data["location_lng"].isNullOrBlank())
-        if (hasLocation) {
-            btnToggleLocation.text = "Disable Location"
-            btnToggleLocation.setTextColor(resources.getColor(R.color.red))
-            btnToggleLocation.setBackgroundColor(resources.getColor(R.color.input_fill))
-            btnToggleLocation.strokeColor = null // keep thin style
-        } else {
-            btnToggleLocation.text = "Enable Location"
-            btnToggleLocation.setTextColor(resources.getColor(R.color.teal_bg))
-            btnToggleLocation.setBackgroundColor(resources.getColor(R.color.white))
-        }
+//        if (hasLocation) {
+//            btnToggleLocation.text = "Disable Location"
+//            btnToggleLocation.setTextColor(resources.getColor(R.color.red))
+//            btnToggleLocation.setBackgroundColor(resources.getColor(R.color.input_fill))
+//            btnToggleLocation.strokeColor = null // keep thin style
+//        } else {
+//            btnToggleLocation.text = "Enable Location"
+//            btnToggleLocation.setTextColor(resources.getColor(R.color.teal_bg))
+//            btnToggleLocation.setBackgroundColor(resources.getColor(R.color.white))
+//        }
     }
 
     private fun showLogoutDialog() {
