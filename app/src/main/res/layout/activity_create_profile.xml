@@ -13,7 +13,7 @@
         android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="60dp"
         android:text="Create Profile"
         android:textColor="@color/teal_bg"
         android:textSize="18sp"
@@ -281,6 +281,38 @@
         </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
 
+    <!-- Gender (LOGIN-style attributes) -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilGender"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="32dp"
+        android:layout_marginTop="12dp"
+        app:layout_constraintTop_toBottomOf="@id/llDob"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:boxBackgroundColor="@color/input_fill"
+        app:boxStrokeColor="@color/input_border"
+        app:boxStrokeWidth="1dp"
+        app:boxStrokeWidthFocused="1dp"
+        app:hintEnabled="false"
+        app:boxCornerRadiusTopStart="20dp"
+        app:boxCornerRadiusTopEnd="20dp"
+        app:boxCornerRadiusBottomStart="20dp"
+        app:boxCornerRadiusBottomEnd="20dp">
+
+        <com.google.android.material.textfield.MaterialAutoCompleteTextView
+            android:id="@+id/etGender"
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:background="@drawable/input_field_bg"
+            android:paddingStart="12dp"
+            android:hint="Gender"
+            android:inputType="textCapWords"
+            android:textColor="@color/black"
+            android:textColorHint="@color/text_muted"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
     <!-- Next -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnNext"
@@ -294,7 +326,7 @@
         android:textColor="@color/white"
         app:cornerRadius="20dp"
         app:backgroundTint="@color/teal_bg"
-        app:layout_constraintTop_toBottomOf="@id/llDob"
+        app:layout_constraintTop_toBottomOf="@id/tilGender"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 

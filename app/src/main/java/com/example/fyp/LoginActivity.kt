@@ -226,7 +226,7 @@ class LoginActivity : AppCompatActivity() {
             }
     }
 
-    // --- Stage-based routing ---
+    // --- Stage-based routing (updated) ---
     private fun goNextByStage() {
         val uid = auth.currentUser?.uid
         if (uid == null) {
@@ -243,66 +243,38 @@ class LoginActivity : AppCompatActivity() {
                     return@addOnSuccessListener
                 }
 
-                val stage   = (doc.getLong("stage") ?: 0L).toInt()
+                val stage = (doc.getLong("stage") ?: 0L).toInt()
                 val userType = doc.getString("userType") ?: ""   // "", "user", "vendor", "clinic"
-                val gender  = doc.getString("gender")            // may be null
-                val firstName = doc.getString("firstName") ?: ""
 
-                val next = when {
-                    // 1) userType not chosen yet → go to user-type selection screen
-                    userType.isBlank() -> {
-                        Intent(this, SelectUserTypeActivity::class.java)
-                    }
+                val nextIntent = when {
+                    // Stage 0 => select account type (signup default stage=0)
+                    stage <= 0 -> Intent(this, SelectUserTypeActivity::class.java)
 
-                    // 2) NORMAL USER FLOW
-                    userType == "user" && stage <= 0 -> {
-                        // No profile yet
-                        Intent(this, CreateProfileActivity::class.java)
-                    }
-
-                    // stage == 1 OR gender still null/empty → force gender screen
-                    userType == "user" && (stage == 1 || gender.isNullOrBlank()) -> {
-                        Intent(this, SelectGenderActivity::class.java).apply {
-                            putExtra("firstName", firstName)
+                    // Stage 1 => profile creation step for the chosen userType
+                    stage == 1 -> {
+                        when (userType) {
+                            "user" -> Intent(this, CreateProfileActivity::class.java)
+                            "vendor" -> Intent(this, VendorCreateProfileActivity::class.java)
+                            "clinic" -> Intent(this, ClinicCreateProfileActivity::class.java)
+                            else -> Intent(this, SelectUserTypeActivity::class.java)
                         }
                     }
 
-                    // user completed everything → main user app
-                    userType == "user" -> {
-                        Intent(this, MainActivity::class.java)
+                    stage == 2 -> {
+                        when (userType) {
+                            "user" -> Intent(this, MainActivity::class.java)
+                            "vendor" -> Intent(this, VendorMainActivity::class.java)
+                            "clinic" -> Intent(this, ClinicMainActivity::class.java)
+                            else -> Intent(this, MainActivity::class.java)
+                        }
                     }
-
-                    // 3) VENDOR FLOW
-//                    userType == "vendor" && stage <= 0 -> {
-//                        // create vendor profile
-//                        Intent(this, VendorProfileActivity::class.java)
-//                    }
-
-//                    userType == "vendor" -> {
-//                        // vendor dashboard
-//                        Intent(this, VendorMainActivity::class.java)
-//                    }
-
-                    // 4) CLINIC FLOW
-//                    userType == "clinic" && stage <= 0 -> {
-//                        Intent(this, ClinicProfileActivity::class.java)
-//                    }
-
-//                    userType == "clinic" -> {
-//                        Intent(this, ClinicMainActivity::class.java)
-//                    }
 
                     // fallback
-                    else -> {
-                        Intent(this, SelectUserTypeActivity::class.java)
-                    }
+                    else -> Intent(this, SelectUserTypeActivity::class.java)
                 }
 
-                next.addFlags(
-                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                            Intent.FLAG_ACTIVITY_NEW_TASK
-                )
-                startActivity(next)
+                nextIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(nextIntent)
                 finish()
             }
             .addOnFailureListener {
@@ -310,7 +282,6 @@ class LoginActivity : AppCompatActivity() {
                 Toast.makeText(this, "Could not load profile. Try again.", Toast.LENGTH_LONG).show()
             }
     }
-
 
     // --- Helpers ---
     private fun setupLiveValidation() {

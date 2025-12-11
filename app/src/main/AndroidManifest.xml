@@ -30,6 +30,12 @@
         android:theme="@style/Theme.FYP"
         tools:targetApi="31">
         <activity
+            android:name=".ClinicEditProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".VendorMainActivity"
+            android:exported="false" />
+        <activity
             android:name=".VendorCreateProfileActivity"
             android:exported="false" />
         <activity

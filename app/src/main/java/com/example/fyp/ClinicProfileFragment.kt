@@ -7,9 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import com.example.fyp.LoginActivity
-import com.example.fyp.R
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -24,7 +23,9 @@ class ClinicProfileFragment : Fragment() {
     private var tvCity: TextView? = null
     private var tvAddress: TextView? = null
     private var tvWebsite: TextView? = null
-    private var btnLogout: MaterialButton? = null
+
+    private var btnEdit: MaterialButton? = null
+    private var rowLogout: View? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -39,9 +40,18 @@ class ClinicProfileFragment : Fragment() {
         tvCity = v.findViewById(R.id.tvClinicCity)
         tvAddress = v.findViewById(R.id.tvClinicAddress)
         tvWebsite = v.findViewById(R.id.tvClinicWebsite)
-        btnLogout = v.findViewById(R.id.btnLogoutClinic)
 
-        btnLogout?.setOnClickListener { doLogout() }
+        btnEdit = v.findViewById(R.id.btnEditClinicProfile)
+        rowLogout = v.findViewById(R.id.rowLogoutClinic)
+
+        btnEdit?.setOnClickListener {
+            // Open edit activity
+            startActivity(Intent(requireContext(), ClinicEditProfileActivity::class.java))
+        }
+
+        rowLogout?.setOnClickListener {
+            showLogoutDialog()
+        }
 
         return v
     }
@@ -53,32 +63,59 @@ class ClinicProfileFragment : Fragment() {
 
     private fun loadProfile() {
         val uid = auth.currentUser?.uid ?: return
+
         db.collection("users").document(uid)
             .get()
             .addOnSuccessListener { doc ->
-                val name = doc.getString("clinicName") ?: "Clinic"
-                val email = doc.getString("email") ?: "-"
-                val phone = doc.getString("clinicPhone") ?: doc.getString("phone") ?: "-"
-                val city = doc.getString("city") ?: "-"
-                val address = doc.getString("clinicAddress") ?: "-"
-                val website = doc.getString("clinicWebsite") ?: "-"
-
-                tvName?.text = "Name: $name"
-                tvEmail?.text = "Email: $email"
-                tvPhone?.text = "Phone: $phone"
-                tvCity?.text = "City: $city"
-                tvAddress?.text = "Address: $address"
-                tvWebsite?.text = "Website: $website"
+                tvName?.text = doc.getString("clinicName") ?: "-"
+                tvEmail?.text = doc.getString("email") ?: "-"
+                tvPhone?.text = doc.getString("clinicPhone") ?: doc.getString("phone") ?: "-"
+                tvCity?.text = doc.getString("city") ?: "-"
+                tvAddress?.text = doc.getString("clinicAddress") ?: "-"
+                tvWebsite?.text = doc.getString("clinicWebsite") ?: "-"
             }
+            .addOnFailureListener {
+                // keep previous values / show nothing
+            }
+    }
+
+//    private fun showLogoutConfirm() {
+//        // Use Material AlertDialog for consistent app theme
+//        val ctx = requireContext()
+//        MaterialAlertDialogBuilder(ctx)
+//            .setTitle("Confirm logout")
+//            .setMessage("Are you sure you want to logout?")
+//            .setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
+//            .setPositiveButton("Logout") { _, _ ->
+//                doLogoutConfirmed()
+//            }
+//            .show()
+//    }
+
+    private fun showLogoutDialog() {
+        val dialog = android.app.Dialog(requireContext())
+        dialog.setContentView(R.layout.dialog_logout)
+        dialog.setCancelable(true)
+
+        dialog.findViewById<View>(R.id.btnCancel)?.setOnClickListener { dialog.dismiss() }
+        dialog.findViewById<View>(R.id.btnLogoutConfirm)?.setOnClickListener {
+            dialog.dismiss()
+            doLogout()
+        }
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.show()
     }
 
     private fun doLogout() {
         auth.signOut()
-        val ctx = requireContext()
-        val i = Intent(ctx, LoginActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+
+        val intent = Intent(requireContext(), LoginActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         }
-        startActivity(i)
+        startActivity(intent)
+
         requireActivity().finish()
     }
+
+
 }

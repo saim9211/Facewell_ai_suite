@@ -4,24 +4,23 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.InputFilter
+import android.text.Selection
 import android.text.TextWatcher
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.progressindicator.CircularProgressIndicator
-import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import java.util.Calendar
-
-// Screenshot reference (uploaded): /mnt/data/7f57d5ba-df8e-46d3-a173-eac603fef161.png
 
 class CreateProfileActivity : AppCompatActivity() {
 
@@ -45,6 +44,7 @@ class CreateProfileActivity : AppCompatActivity() {
     private lateinit var tilYear: TextInputLayout
     private lateinit var tilMonth: TextInputLayout
     private lateinit var tilDay: TextInputLayout
+    private lateinit var tilGender: TextInputLayout
 
     private lateinit var etFirst: TextInputEditText
     private lateinit var etLast: TextInputEditText
@@ -52,6 +52,7 @@ class CreateProfileActivity : AppCompatActivity() {
     private lateinit var etYear: TextInputEditText
     private lateinit var etMonth: MaterialAutoCompleteTextView
     private lateinit var etDay: TextInputEditText
+    private lateinit var etGender: MaterialAutoCompleteTextView
 
     private lateinit var btnNext: MaterialButton
     private lateinit var loadingOverlay: View
@@ -63,6 +64,7 @@ class CreateProfileActivity : AppCompatActivity() {
 
     // month short names shown to user (index 0 -> Jan => month number 1)
     private val monthShort = arrayOf("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
+    private val genderSelect = arrayOf("Male","Female","Prefer not to say")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,11 +73,11 @@ class CreateProfileActivity : AppCompatActivity() {
 
         setDefaultAvatar("avatar1", R.drawable.avatar1)
 
-        // City autocomplete (if you have R.array.pk_cities keep that; otherwise this is still safe)
+        // City autocomplete (if you have R.array.pk_cities, keep that)
         val cities = try {
             resources.getStringArray(R.array.pk_cities)
         } catch (e: Exception) {
-            arrayOf<String>() // fallback empty
+            arrayOf<String>()
         }
         val cityAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, cities)
         etCity.setAdapter(cityAdapter)
@@ -83,8 +85,12 @@ class CreateProfileActivity : AppCompatActivity() {
 
         setupAvatarPicker()
         setupMonthDropdown()
+        setupGenderDropdown()
         setupInputFiltersAndWatchers()
-        btnNext.setOnClickListener { onNext() }
+        loadExistingIfAny()
+
+//        btnNext.setOnClickListener { onNext() }
+//        findViewById<View>(R.id.btnBack).setOnClickListener { onBackPressedDispatcher.onBackPressed() }
     }
 
     private fun bindViews() {
@@ -105,6 +111,7 @@ class CreateProfileActivity : AppCompatActivity() {
         tilYear  = findViewById(R.id.tilYear)
         tilMonth = findViewById(R.id.tilMonth)
         tilDay   = findViewById(R.id.tilDay)
+        tilGender= findViewById(R.id.tilGender)
 
         etFirst = findViewById(R.id.etFirst)
         etLast  = findViewById(R.id.etLast)
@@ -112,6 +119,7 @@ class CreateProfileActivity : AppCompatActivity() {
         etYear  = findViewById(R.id.etYear)
         etMonth = findViewById(R.id.etMonth)
         etDay   = findViewById(R.id.etDay)
+        etGender= findViewById(R.id.etGender)
 
         btnNext        = findViewById(R.id.btnNext)
         loadingOverlay = findViewById(R.id.loadingOverlay)
@@ -138,6 +146,7 @@ class CreateProfileActivity : AppCompatActivity() {
             avatarOverlay.visibility = View.GONE
         }
 
+        // Ensure these views exist in layout (you used same ids earlier)
         pickA1.setOnClickListener { select("avatar1", R.drawable.avatar1) }
         pickA2.setOnClickListener { select("avatar2", R.drawable.avatar2) }
         pickA3.setOnClickListener { select("avatar3", R.drawable.avatar3) }
@@ -152,17 +161,20 @@ class CreateProfileActivity : AppCompatActivity() {
     private fun setupMonthDropdown() {
         val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, monthShort)
         etMonth.setAdapter(adapter)
-        // show dropdown when clicked
         etMonth.setOnClickListener { etMonth.showDropDown() }
+    }
+
+    private fun setupGenderDropdown() {
+        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, genderSelect)
+        etGender.setAdapter(adapter)
+        etGender.setOnClickListener { etGender.showDropDown() }
     }
 
     private fun setupInputFiltersAndWatchers() {
         // Name input filter - allow letters and spaces only
         val nameFilter = InputFilter { source, start, end, dest, dstart, dend ->
-            val allowed = Regex("^[A-Za-z ]+\$")
             val input = source.subSequence(start, end).toString()
             if (input.isEmpty()) return@InputFilter null // deletion allowed
-            // if every char in input is either letter or space -> accept
             for (ch in input) {
                 if (!(ch.isLetter() || ch == ' ')) return@InputFilter ""
             }
@@ -226,6 +238,39 @@ class CreateProfileActivity : AppCompatActivity() {
         })
     }
 
+    private fun loadExistingIfAny() {
+        val uid = auth.currentUser?.uid ?: return
+        showSaving(true)
+        db.collection("users").document(uid)
+            .get()
+            .addOnSuccessListener { doc ->
+                etFirst.setText(doc.getString("firstName") ?: "")
+                etLast.setText(doc.getString("lastName") ?: "")
+                etCity.setText(doc.getString("city") ?: "")
+                val dob = doc.getString("dob") // expected ISO yyyy-mm-dd
+                if (!dob.isNullOrEmpty()) {
+                    try {
+                        val parts = dob.split("-")
+                        if (parts.size >= 3) {
+                            etYear.setText(parts[0])
+                            val m = parts[1].toIntOrNull()
+                            if (m != null && m in 1..12) etMonth.setText(monthShort[m-1])
+                            etDay.setText(parts[2])
+                        }
+                    } catch (e: Exception) {}
+                }
+                val avatar = doc.getString("avatar")
+                if (!avatar.isNullOrEmpty()) {
+                    // if you want to map avatar name -> drawable, do here; for now keep default if not found
+                }
+                etGender.setText(doc.getString("gender") ?: "")
+                showSaving(false)
+            }
+            .addOnFailureListener {
+                showSaving(false)
+            }
+    }
+
     private fun onNext() {
         clearErrors()
 
@@ -235,9 +280,11 @@ class CreateProfileActivity : AppCompatActivity() {
         val yearTxt  = etYear.text?.toString()?.trim().orEmpty()
         val monthTxt = etMonth.text?.toString()?.trim().orEmpty()
         val dayTxt   = etDay.text?.toString()?.trim().orEmpty()
+        val genderTxt = etGender.text?.toString()?.trim().orEmpty()
 
         var valid = true
 
+        // Avatar optional? earlier you required avatar — keep that behavior:
         if (selectedAvatar == null) {
             Toast.makeText(this, "Please select an avatar.", Toast.LENGTH_SHORT).show()
             valid = false
@@ -285,6 +332,20 @@ class CreateProfileActivity : AppCompatActivity() {
             tilMonth.error = null
         }
 
+        if (genderTxt.isEmpty()) {
+            tilGender.error = "Select gender"
+            valid = false
+        } else {
+            // ensure value is one of the allowed items (case-insensitive)
+            val okGender = genderSelect.any { it.equals(genderTxt, ignoreCase = true) }
+            if (!okGender) {
+                tilGender.error = "Invalid selection"
+                valid = false
+            } else {
+                tilGender.error = null
+            }
+        }
+
         if (day == null) {
             tilDay.error = "Required"
             valid = false
@@ -309,8 +370,9 @@ class CreateProfileActivity : AppCompatActivity() {
             "firstName" to first,
             "lastName"  to last,
             "city"      to city,
+            "gender"    to genderTxt,
             "dob"       to String.format("%04d-%02d-%02d", year, monthNumber, day),
-            "avatar"    to selectedAvatar!!,
+            "avatar"    to (selectedAvatar ?: "avatar1"),
             "stage"     to 1,
             "profileUpdatedAt" to System.currentTimeMillis()
         )
@@ -318,10 +380,11 @@ class CreateProfileActivity : AppCompatActivity() {
         db.collection("users").document(uid)
             .set(payload, SetOptions.merge())
             .addOnSuccessListener {
-                startActivity(Intent(this, SelectGenderActivity::class.java).apply {
-                    putExtra("firstName", first)
-                })
-                finish()
+                // Done — go to MainActivity (clear task so back doesn't return)
+                val i = Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+                startActivity(i)
             }
             .addOnFailureListener {
                 Toast.makeText(this, "Failed to save profile. Try again.", Toast.LENGTH_LONG).show()
@@ -336,6 +399,7 @@ class CreateProfileActivity : AppCompatActivity() {
         tilYear.error  = null
         tilMonth.error = null
         tilDay.error   = null
+        tilGender.error= null
     }
 
     private fun showSaving(show: Boolean) {

@@ -1,82 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/vendorCreateRoot"
+    android:id="@+id/editClinicRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white">
 
-    <ImageButton
-        android:id="@+id/btnBack"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Back"
-        android:src="@drawable/back_arrow"
-        app:tint="@color/text_muted"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <TextView
-        android:id="@+id/tvTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="70dp"
-        android:text="Vendor profile"
-        android:textColor="@color/teal_bg"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5" />
-
-    <TextView
-        android:id="@+id/tvSubtitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Add basic details to continue"
-        android:textColor="@color/text_muted"
-        android:textSize="14sp"
-        app:layout_constraintTop_toBottomOf="@id/tvTitle"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <ScrollView
-        android:id="@+id/scroll"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:fillViewport="true"
-        android:paddingHorizontal="32dp"
-        app:layout_constraintTop_toBottomOf="@id/tvSubtitle"
-        app:layout_constraintBottom_toTopOf="@id/btnSave"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        android:clipToPadding="false"
+        android:paddingBottom="24dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Vendor / Shop name label -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="Shop / Vendor name"
-                android:textColor="@color/black"
-                android:textSize="13sp"
-                android:textStyle="bold"/>
+            <!-- Header (same rounded bg as user edit) -->
+            <FrameLayout
+                android:id="@+id/header"
+                android:layout_width="match_parent"
+                android:layout_height="180dp"
+                android:background="@drawable/bg_home_header_round"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="20dp">
 
+                <ImageButton
+                    android:id="@+id/btnBack"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/back_arrow"
+                    app:tint="@color/on_teal"/>
+
+                <TextView
+                    android:id="@+id/tvTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top|center_horizontal"
+                    android:text="Edit Clinic Profile"
+                    android:textColor="@color/on_teal"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="6dp"/>
+            </FrameLayout>
+
+            <!-- Clinic fields (styled exactly like user edit fields) -->
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/tilVendorName"
+                android:id="@+id/tilClinicName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginHorizontal="32dp"
+                android:layout_marginTop="16dp"
                 app:boxBackgroundColor="@color/input_fill"
                 app:boxStrokeColor="@color/input_border"
                 app:boxStrokeWidth="1dp"
@@ -88,69 +67,23 @@
                 app:boxCornerRadiusBottomEnd="20dp">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etVendorName"
+                    android:id="@+id/etClinicName"
                     android:layout_width="match_parent"
                     android:layout_height="58dp"
                     android:background="@drawable/input_field_bg"
                     android:paddingStart="12dp"
-                    android:hint="e.g., Ali's Store"
-                    android:textColor="@color/black"
-                    android:textColorHint="@color/text_muted"
-                    android:inputType="textPersonName" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <!-- Phone -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="Phone"
-                android:textColor="@color/black"
-                android:textSize="13sp"
-                android:textStyle="bold"/>
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/tilVendorPhone"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                app:boxBackgroundColor="@color/input_fill"
-                app:boxStrokeColor="@color/input_border"
-                app:boxStrokeWidth="1dp"
-                app:boxStrokeWidthFocused="1dp"
-                app:hintEnabled="false"
-                app:boxCornerRadiusTopStart="20dp"
-                app:boxCornerRadiusTopEnd="20dp"
-                app:boxCornerRadiusBottomStart="20dp"
-                app:boxCornerRadiusBottomEnd="20dp">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etVendorPhone"
-                    android:layout_width="match_parent"
-                    android:layout_height="58dp"
-                    android:background="@drawable/input_field_bg"
-                    android:paddingStart="12dp"
-                    android:hint="Phone (11 digits)"
-                    android:inputType="phone"
+                    android:hint="Clinic name"
                     android:textColor="@color/black"
                     android:textColorHint="@color/text_muted"/>
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- City -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="City"
-                android:textColor="@color/black"
-                android:textSize="13sp"
-                android:textStyle="bold"/>
-
+            <!-- City dropdown -->
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/tilVendorCity"
+                android:id="@+id/tilCity"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginHorizontal="32dp"
+                android:layout_marginTop="12dp"
                 app:boxBackgroundColor="@color/input_fill"
                 app:boxStrokeColor="@color/input_border"
                 app:boxStrokeWidth="1dp"
@@ -161,8 +94,8 @@
                 app:boxCornerRadiusBottomStart="20dp"
                 app:boxCornerRadiusBottomEnd="20dp">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etVendorCity"
+                <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                    android:id="@+id/etCity"
                     android:layout_width="match_parent"
                     android:layout_height="58dp"
                     android:background="@drawable/input_field_bg"
@@ -173,21 +106,13 @@
                     android:textColorHint="@color/text_muted"/>
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Address -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="Address"
-                android:textColor="@color/black"
-                android:textSize="13sp"
-                android:textStyle="bold"/>
-
+            <!-- Phone -->
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/tilVendorAddress"
+                android:id="@+id/tilPhone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginHorizontal="32dp"
+                android:layout_marginTop="12dp"
                 app:boxBackgroundColor="@color/input_fill"
                 app:boxStrokeColor="@color/input_border"
                 app:boxStrokeWidth="1dp"
@@ -199,36 +124,55 @@
                 app:boxCornerRadiusBottomEnd="20dp">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etVendorAddress"
+                    android:id="@+id/etPhone"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minLines="2"
+                    android:layout_height="58dp"
                     android:background="@drawable/input_field_bg"
                     android:paddingStart="12dp"
-                    android:paddingTop="8dp"
-                    android:paddingBottom="8dp"
-                    android:hint="Shop address"
+                    android:hint="Phone (11 digits)"
+                    android:inputType="phone"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/text_muted"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Address (multi-line) -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilAddress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="32dp"
+                android:layout_marginTop="12dp"
+                app:boxBackgroundColor="@color/input_fill"
+                app:boxStrokeColor="@color/input_border"
+                app:boxStrokeWidth="1dp"
+                app:boxStrokeWidthFocused="1dp"
+                app:hintEnabled="false"
+                app:boxCornerRadiusTopStart="20dp"
+                app:boxCornerRadiusTopEnd="20dp"
+                app:boxCornerRadiusBottomStart="20dp"
+                app:boxCornerRadiusBottomEnd="20dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etAddress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minLines="3"
+                    android:background="@drawable/input_field_bg"
+                    android:padding="12dp"
+                    android:hint="Clinic address"
                     android:inputType="textMultiLine"
                     android:gravity="top|start"
                     android:textColor="@color/black"
                     android:textColorHint="@color/text_muted"/>
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Website optional -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="Website (optional)"
-                android:textColor="@color/black"
-                android:textSize="13sp"
-                android:textStyle="bold"/>
-
+            <!-- Website (optional) -->
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/tilVendorWebsite"
+                android:id="@+id/tilWebsite"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginHorizontal="32dp"
+                android:layout_marginTop="12dp"
                 app:boxBackgroundColor="@color/input_fill"
                 app:boxStrokeColor="@color/input_border"
                 app:boxStrokeWidth="1dp"
@@ -240,7 +184,7 @@
                 app:boxCornerRadiusBottomEnd="20dp">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etVendorWebsite"
+                    android:id="@+id/etWebsite"
                     android:layout_width="match_parent"
                     android:layout_height="58dp"
                     android:background="@drawable/input_field_bg"
@@ -251,37 +195,32 @@
                     android:textColorHint="@color/text_muted"/>
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- Save -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSave"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginHorizontal="32dp"
+                android:layout_marginTop="18dp"
+                android:layout_marginBottom="100dp"
+                android:text="Save changes"
+                android:textAllCaps="false"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                app:cornerRadius="20dp"
+                app:backgroundTint="@color/teal_bg"/>
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnSave"
-        android:layout_width="0dp"
-        android:layout_height="58dp"
-        android:layout_marginHorizontal="32dp"
-        android:layout_marginBottom="24dp"
-        android:text="Save &amp; Continue"
-        android:textAllCaps="false"
-        android:textColor="@color/white"
-        android:textStyle="bold"
-        app:backgroundTint="@color/teal_bg"
-        app:cornerRadius="20dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
+    <!-- Saving overlay (same pattern as other screens) -->
     <FrameLayout
         android:id="@+id/loadingOverlay"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:visibility="gone"
         android:clickable="true"
         android:focusable="true"
-        android:elevation="16dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        android:elevation="18dp">
 
         <View
             android:layout_width="match_parent"
@@ -295,5 +234,4 @@
             android:layout_gravity="center"
             android:indeterminate="true"/>
     </FrameLayout>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

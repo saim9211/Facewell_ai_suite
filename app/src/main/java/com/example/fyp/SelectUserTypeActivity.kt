@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
+import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
@@ -22,6 +23,10 @@ class SelectUserTypeActivity : AppCompatActivity() {
     private lateinit var icUser: ImageView
     private lateinit var icVendor: ImageView
     private lateinit var icClinic: ImageView
+
+    // loader views (add these ids to your activity_select_user_type.xml)
+    private var loadingOverlay: View? = null
+    private var progress: CircularProgressIndicator? = null
 
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
@@ -45,6 +50,10 @@ class SelectUserTypeActivity : AppCompatActivity() {
         icUser   = findViewById(R.id.icUser)
         icVendor = findViewById(R.id.icVendor)
         icClinic = findViewById(R.id.icClinic)
+
+        // loader (optional in XML — add FrameLayout overlay with id loadingOverlay and a CircularProgressIndicator with id progress)
+        loadingOverlay = findViewById(R.id.loadingOverlay)
+        progress = findViewById(R.id.progress)
     }
 
     private fun setupClicks() {
@@ -94,6 +103,8 @@ class SelectUserTypeActivity : AppCompatActivity() {
             return
         }
 
+        showLoading(true)
+
         val payload = mapOf(
             "userType" to selectedType,
             "stage" to 1 // next stage = profile creation for that type
@@ -102,6 +113,7 @@ class SelectUserTypeActivity : AppCompatActivity() {
         db.collection("users").document(uid)
             .set(payload, SetOptions.merge())
             .addOnSuccessListener {
+                // navigate to create-profile screen for the selected type
                 when (selectedType) {
                     "user" -> startActivity(Intent(this, CreateProfileActivity::class.java))
                     "vendor" -> startActivity(Intent(this, VendorCreateProfileActivity::class.java))
@@ -110,7 +122,18 @@ class SelectUserTypeActivity : AppCompatActivity() {
                 finish()
             }
             .addOnFailureListener {
-                Toast.makeText(this, "Failed to save.", Toast.LENGTH_SHORT).show()
+                showLoading(false)
+                Toast.makeText(this, "Failed to save. Try again.", Toast.LENGTH_SHORT).show()
             }
+    }
+
+    private fun showLoading(loading: Boolean) {
+        loadingOverlay?.visibility = if (loading) View.VISIBLE else View.GONE
+        progress?.visibility = if (loading) View.VISIBLE else View.GONE
+
+        btnNext.isEnabled = !loading
+        cardUser.isEnabled = !loading
+        cardVendor.isEnabled = !loading
+        cardClinic.isEnabled = !loading
     }
 }
