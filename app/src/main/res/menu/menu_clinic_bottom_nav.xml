@@ -3,9 +3,9 @@
     <item
         android:id="@+id/nav_clinic_dashboard"
         android:title="Dashboard"
-        android:icon="@android:drawable/ic_menu_myplaces" />
+        android:icon="@drawable/ic_dashboard" />
     <item
         android:id="@+id/nav_clinic_profile"
         android:title="Profile"
-        android:icon="@android:drawable/ic_menu_manage" />
+        android:icon="@drawable/ic_profile" />
 </menu>

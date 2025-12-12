@@ -30,6 +30,18 @@
         android:theme="@style/Theme.FYP"
         tools:targetApi="31">
         <activity
+            android:name=".VendorProfileFragment"
+            android:exported="false" />
+        <activity
+            android:name=".VendorListingsFragment"
+            android:exported="false" />
+        <activity
+            android:name=".VendorAddProductFragment"
+            android:exported="false" />
+        <activity
+            android:name=".VendorDashboardFragment"
+            android:exported="false" />
+        <activity
             android:name=".ClinicEditProfileActivity"
             android:exported="false" />
         <activity
