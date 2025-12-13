@@ -3,27 +3,33 @@ package com.example.fyp
 import java.io.Serializable
 
 data class Product(
-    val id: String = "",                 // Firestore doc ID
-    val vendorId: String = "",           // Owner (uid)
+    val id: String = "",
+    val vendorId: String = "",
 
-    val title: String = "",              // Required
-    val description: String = "",        // Max 30 words (validated in UI)
-    val category: String = "other",      // "eye" | "skin" | "mood" | "other"
-    val tags: List<String> = emptyList(),// Optional search filters
+    val title: String = "",
+    val description: String = "",
+    val category: String = "other",   // eye | skin | mood | other
 
-    val link: String? = null,            // Optional product URL
-    val images: List<String> = emptyList(), // Storage URLs (1–3 images)
+    val recommendedFor: List<String> = emptyList(),
+    val tags: List<String> = emptyList(),
 
-    val clicks: Long = 0L,               // Increment on every fetch/open
-    val views: Long = 0L,                // Optional page views metric
+    val link: String? = null,
+    val images: List<String> = emptyList(),
 
-    val price: Double? = null,           // Optional
-    val currency: String? = "PKR",       // Default PKR
+    val clicks: Long = 0L,
+    val views: Long = 0L,
 
-    val isActive: Boolean = true,        // Soft delete
-    val isApproved: Boolean = false,     // Admin approval flag
-    val visibility: String? = "public",  // "public" | "private" | "unlisted"
+    val price: Double? = null,
+    val currency: String? = "PKR",
 
-    val createdAt: Long? = null,         // serverTimestamp
-    val updatedAt: Long? = null          // serverTimestamp
+    // ⭐ RATING SYSTEM
+    val avgRating: Double = 0.0,      // average of all user ratings
+    val ratingsCount: Int = 0,        // number of users who rated
+
+    val isActive: Boolean = true,
+    val isApproved: Boolean = false,
+    val visibility: String? = "public",
+
+    val createdAt: Long? = null,
+    val updatedAt: Long? = null
 ) : Serializable

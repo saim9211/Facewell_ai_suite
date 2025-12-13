@@ -24,6 +24,7 @@ class VendorListingsFragment : Fragment() {
     private lateinit var emptyContainer: View
     private lateinit var btnGoList: Button
     private lateinit var rv: RecyclerView
+    private lateinit var tvHeading: TextView
 
     private val adapter by lazy { VendorProductAdapter(mutableListOf()) }
 
@@ -36,11 +37,13 @@ class VendorListingsFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+
         swipeRefresh = view.findViewById(R.id.swipeRefresh)
         progress = view.findViewById(R.id.progressListings)
         emptyContainer = view.findViewById(R.id.emptyContainer)
         btnGoList = view.findViewById(R.id.btnGoListProduct)
         rv = view.findViewById(R.id.rvProducts)
+        tvHeading = view.findViewById(R.id.tvHeading)
 
         rv.layoutManager = LinearLayoutManager(requireContext())
         rv.adapter = adapter
@@ -48,11 +51,9 @@ class VendorListingsFragment : Fragment() {
         btnGoList.setOnClickListener { navigateToAdd() }
 
         swipeRefresh.setOnRefreshListener {
-            // refresh: re-fetch products
             loadProducts()
         }
 
-        // initial load
         loadProducts()
     }
 
@@ -63,12 +64,13 @@ class VendorListingsFragment : Fragment() {
             return
         }
 
-        // show loading only if not a swipe-refresh (to avoid double UI)
+        // START LOADING UI
         if (!swipeRefresh.isRefreshing) {
             progress.visibility = View.VISIBLE
         }
         emptyContainer.visibility = View.GONE
         rv.visibility = View.GONE
+        tvHeading.visibility = View.GONE
 
         db.collection("products")
             .whereEqualTo("vendorId", user.uid)
@@ -91,10 +93,13 @@ class VendorListingsFragment : Fragment() {
                         title = doc.getString("title") ?: "",
                         description = doc.getString("description") ?: "",
                         category = doc.getString("category") ?: "other",
+                        recommendedFor = (doc.get("recommendedFor") as? List<String>) ?: emptyList(),
                         link = doc.getString("link"),
                         images = (doc.get("images") as? List<String>) ?: emptyList(),
-                        clicks = (doc.getLong("clicks") ?: 0L),
-                        views = (doc.getLong("views") ?: 0L),
+                        clicks = doc.getLong("clicks") ?: 0L,
+                        views = doc.getLong("views") ?: 0L,
+                        price = doc.getDouble("price"),          // 🔥 FIXED
+                        currency = doc.getString("currency") ?: "PKR",
                         isActive = doc.getBoolean("isActive") ?: true,
                         isApproved = doc.getBoolean("isApproved") ?: false,
                         createdAt = doc.getLong("createdAt"),
@@ -102,6 +107,8 @@ class VendorListingsFragment : Fragment() {
                     )
                 }
 
+
+                tvHeading.visibility = View.VISIBLE
                 adapter.replaceAll(items.toMutableList())
                 rv.visibility = View.VISIBLE
             }
@@ -116,29 +123,27 @@ class VendorListingsFragment : Fragment() {
         progress.visibility = View.GONE
         rv.visibility = View.GONE
         emptyContainer.visibility = View.VISIBLE
+        tvHeading.visibility = View.GONE
 
         val tvSub = emptyContainer.findViewById<TextView>(R.id.tvEmptySub)
-        if (!message.isNullOrBlank()) {
-            tvSub.text = message
-        } else {
-            tvSub.text = "You don't have any products live right now. Create a product to show in reports and let users buy from external links."
-        }
+        tvSub.text = message ?: "You don't have any products live right now. Create a product to show in reports and let users buy from external links."
+
         swipeRefresh.isRefreshing = false
     }
 
     private fun navigateToAdd() {
-        val act = activity
-        if (act != null) {
-            val bottomNav = act.findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNavVendor)
-            if (bottomNav != null) {
-                bottomNav.selectedItemId = R.id.nav_vendor_add
-                return
-            }
-            val vp = act.findViewById<androidx.viewpager2.widget.ViewPager2>(R.id.viewPagerVendor)
-            if (vp != null) {
-                val idx = VendorPagerAdapter.Page.values().indexOf(VendorPagerAdapter.Page.ADD)
-                vp.setCurrentItem(idx, false)
-            }
+        val act = activity ?: return
+
+        val bottomNav = act.findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNavVendor)
+        if (bottomNav != null) {
+            bottomNav.selectedItemId = R.id.nav_vendor_add
+            return
+        }
+
+        val vp = act.findViewById<androidx.viewpager2.widget.ViewPager2>(R.id.viewPagerVendor)
+        if (vp != null) {
+            val idx = VendorPagerAdapter.Page.values().indexOf(VendorPagerAdapter.Page.ADD)
+            vp.setCurrentItem(idx, false)
         }
     }
 }

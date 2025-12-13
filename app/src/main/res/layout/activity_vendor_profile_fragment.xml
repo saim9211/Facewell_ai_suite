@@ -1,10 +1,194 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+    android:id="@+id/scrollVendorProfile"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".VendorProfileFragment">
+    android:background="@color/white"
+    android:fillViewport="true"
+    android:clipToPadding="false"
+    android:paddingBottom="90dp">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Header -->
+        <FrameLayout
+            android:id="@+id/headerVendor"
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:background="@drawable/bg_home_header_round"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="34dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvVendorProfileTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Vendor Profile"
+                    android:textColor="@color/on_teal"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Edit button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnEditVendorProfile"
+                android:layout_width="wrap_content"
+                android:layout_height="46dp"
+                android:layout_gravity="end|top"
+                android:layout_marginTop="25dp"
+                android:layout_marginEnd="12dp"
+                android:text="Edit"
+                android:textAllCaps="false"
+                android:textStyle="bold"
+                android:textColor="@color/teal_bg"
+                app:backgroundTint="@color/white"
+                app:cornerRadius="18dp"
+                android:elevation="0dp"/>
+        </FrameLayout>
+
+        <!-- Details Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardVendorDetails"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            app:strokeWidth="0dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/input_fill">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Name Label -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Business Name"
+                    android:textColor="@color/text_muted"/>
+
+                <TextView
+                    android:id="@+id/tvVendorName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"/>
+
+                <View android:layout_width="match_parent" android:layout_height="12dp"/>
+
+                <!-- Email -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Email"
+                    android:textColor="@color/text_muted"/>
+
+                <TextView
+                    android:id="@+id/tvVendorEmail"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_muted"
+                    android:textSize="14sp"/>
+
+                <View android:layout_width="match_parent" android:layout_height="12dp"/>
+
+                <!-- Phone -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Phone"
+                    android:textColor="@color/text_muted"/>
+
+                <TextView
+                    android:id="@+id/tvVendorPhone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"/>
+
+                <View android:layout_width="match_parent" android:layout_height="12dp"/>
+
+                <!-- City -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="City"
+                    android:textColor="@color/text_muted"/>
+
+                <TextView
+                    android:id="@+id/tvVendorCity"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"/>
+
+                <View android:layout_width="match_parent" android:layout_height="12dp"/>
+
+                <!-- Website -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Website"
+                    android:textColor="@color/text_muted"/>
+
+                <TextView
+                    android:id="@+id/tvVendorWebsite"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_muted"
+                    android:textSize="14sp"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Logout -->
+        <LinearLayout
+            android:id="@+id/listOptionsVendor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="24dp">
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/rowLogoutVendor"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                app:strokeWidth="0dp"
+                app:cardCornerRadius="12dp"
+                app:cardBackgroundColor="@color/input_fill">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:paddingStart="16dp">
+
+                    <TextView
+                        android:id="@+id/tvLogoutVendor"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Logout"
+                        android:textColor="@color/logout_red"
+                        android:textSize="15sp"
+                        android:textStyle="bold"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

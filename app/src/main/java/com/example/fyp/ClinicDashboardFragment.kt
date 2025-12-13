@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -14,14 +15,15 @@ class ClinicDashboardFragment : Fragment() {
     private val auth by lazy { FirebaseAuth.getInstance() }
     private val db by lazy { FirebaseFirestore.getInstance() }
 
+    private lateinit var swipeRefresh: SwipeRefreshLayout
+
     private var tvGreeting: TextView? = null
-    private var tvSub: TextView? = null
     private var tvLocationPhone: TextView? = null
 
     private var tvTotalClicksValue: TextView? = null
     private var tvAvgRatingValue: TextView? = null
-    private var tvActiveProductsValue: TextView? = null
-    private var tvUpcomingApptsValue: TextView? = null
+    private var tvRatingCountValue: TextView? = null
+    private var tvContactClicksValue: TextView? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -30,54 +32,58 @@ class ClinicDashboardFragment : Fragment() {
     ): View {
         val v = inflater.inflate(R.layout.activity_clinic_dashboard_fragment, container, false)
 
+        swipeRefresh = v.findViewById(R.id.swipeClinic)
+
         tvGreeting = v.findViewById(R.id.tvClinicGreeting)
-        tvSub = v.findViewById(R.id.tvClinicSub)
         tvLocationPhone = v.findViewById(R.id.tvClinicLocationPhone)
 
         tvTotalClicksValue = v.findViewById(R.id.tvTotalClicksValue)
         tvAvgRatingValue = v.findViewById(R.id.tvAvgRatingValue)
-        tvActiveProductsValue = v.findViewById(R.id.tvActiveProductsValue)
-        tvUpcomingApptsValue = v.findViewById(R.id.tvUpcomingApptsValue)
+        tvRatingCountValue = v.findViewById(R.id.tvRatingCountValue)
+        tvContactClicksValue = v.findViewById(R.id.tvContactClicksValue)
+
+        swipeRefresh.setOnRefreshListener { loadDashboard() }
 
         return v
     }
 
     override fun onResume() {
         super.onResume()
-        loadHeader()
+        loadDashboard()
     }
 
-    private fun loadHeader() {
+    private fun loadDashboard() {
         val uid = auth.currentUser?.uid ?: return
+        swipeRefresh.isRefreshing = true
+
         db.collection("users").document(uid)
             .get()
             .addOnSuccessListener { doc ->
-                // Clinic display name (fallback)
-                val name = doc.getString("clinicName") ?: doc.getString("vendorName") ?: "Clinic"
-                tvGreeting?.text = "$name"
 
-                // city + phone
+                val name = doc.getString("clinicName") ?: "Clinic"
+                tvGreeting?.text = name
+
                 val city = doc.getString("city") ?: ""
                 val phone = doc.getString("clinicPhone") ?: doc.getString("phone") ?: ""
-                val locPhone = if (city.isNotBlank() && phone.isNotBlank()) "$city  •  $phone"
-                else if (city.isNotBlank()) city
-                else if (phone.isNotBlank()) phone
-                else ""
-                tvLocationPhone?.text = locPhone
 
-                // Stats (placeholders; replace with your real fields if present)
-                val clicks = (doc.getLong("stats_totalClicks") ?: 0L)
-                val rating = (doc.getDouble("stats_avgRating") ?: 0.0)
-                val activeProducts = (doc.getLong("stats_activeProducts") ?: 0L)
-                val upcoming = (doc.getLong("stats_upcomingAppointments") ?: 0L)
+                tvLocationPhone?.text = listOf(city, phone)
+                    .filter { it.isNotBlank() }
+                    .joinToString(" • ")
+
+                val clicks = doc.getLong("clinicClicks") ?: 0L
+                val avgRating = doc.getDouble("clinicAvgRating") ?: 0.0
+                val ratingCount = doc.getLong("clinicRatingsCount") ?: 0L
+                val contactClicks = doc.getLong("clinicContactClicks") ?: 0L
 
                 tvTotalClicksValue?.text = clicks.toString()
-                tvAvgRatingValue?.text = "%.1f".format(rating)
-                tvActiveProductsValue?.text = activeProducts.toString()
-                tvUpcomingApptsValue?.text = upcoming.toString()
+                tvAvgRatingValue?.text = String.format("%.1f", avgRating)
+                tvRatingCountValue?.text = ratingCount.toString()
+                tvContactClicksValue?.text = contactClicks.toString()
+
+                swipeRefresh.isRefreshing = false
             }
             .addOnFailureListener {
-                // keep defaults if read failed
+                swipeRefresh.isRefreshing = false
             }
     }
 }

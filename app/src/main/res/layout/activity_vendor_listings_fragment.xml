@@ -59,18 +59,34 @@
             <Button
                 android:id="@+id/btnGoListProduct"
                 android:layout_width="wrap_content"
+                android:textColor="@color/white"
                 android:layout_height="48dp"
                 android:text="List a product now"
                 android:layout_marginTop="16dp"/>
         </LinearLayout>
+
+        <!-- ACTIVE LISTINGS HEADING -->
+        <TextView
+            android:id="@+id/tvHeading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Active listings"
+            android:textColor="@color/teal_bg"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintTop_toBottomOf="@id/progressListings"
+            app:layout_constraintStart_toStartOf="parent" />
 
         <!-- Recycler -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvProducts"
             android:layout_width="0dp"
             android:layout_height="0dp"
+            android:paddingBottom="80dp"
             android:visibility="gone"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvHeading"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

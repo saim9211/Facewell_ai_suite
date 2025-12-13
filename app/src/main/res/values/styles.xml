@@ -90,6 +90,11 @@
         <item name="cornerSize">24dp</item>
     </style>
 
+    <style name="EditHintStyle" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textColor">@color/black</item>
+    </style>
+
+
 
 
 

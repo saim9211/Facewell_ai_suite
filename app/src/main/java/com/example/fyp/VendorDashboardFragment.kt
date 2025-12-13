@@ -5,10 +5,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
-import com.google.android.material.card.MaterialCardView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.card.MaterialCardView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -16,6 +16,8 @@ class VendorDashboardFragment : Fragment() {
 
     private val auth by lazy { FirebaseAuth.getInstance() }
     private val db by lazy { FirebaseFirestore.getInstance() }
+
+    private lateinit var swipeRefresh: SwipeRefreshLayout
 
     private lateinit var tvGreeting: TextView
     private lateinit var tvLocationPhone: TextView
@@ -34,6 +36,9 @@ class VendorDashboardFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+
+        swipeRefresh = view.findViewById(R.id.swipeDashboard)
+
         tvGreeting = view.findViewById(R.id.tvVendorGreeting)
         tvLocationPhone = view.findViewById(R.id.tvVendorLocationPhone)
         tvTotalClicks = view.findViewById(R.id.tvVendorTotalClicksValue)
@@ -42,84 +47,132 @@ class VendorDashboardFragment : Fragment() {
         tvSales = view.findViewById(R.id.tvVendorSalesValue)
         cardActiveProducts = view.findViewById(R.id.cardVendorActiveProducts)
 
-        // Defaults while loading
+        // Default values while loading
         tvTotalClicks.text = "0"
         tvAvgRating.text = "0.0"
         tvActiveProducts.text = "0"
         tvSales.text = "0"
 
-        val user = auth.currentUser
-        if (user == null) {
-            // No user — keep defaults (the activity already listens to auth state)
-            tvGreeting.text = "Vendor"
-            tvLocationPhone.text = "City • 03xx-xxxxxxx"
+        swipeRefresh.setOnRefreshListener { loadVendorData() }
+
+        loadVendorData()
+
+        cardActiveProducts.setOnClickListener {
+            val act = activity ?: return@setOnClickListener
+
+            val bottomNav = act.findViewById<BottomNavigationView>(R.id.bottomNavVendor)
+            if (bottomNav != null) {
+                bottomNav.selectedItemId = R.id.nav_vendor_listings
+                return@setOnClickListener
+            }
+
+            val vp = act.findViewById<androidx.viewpager2.widget.ViewPager2>(R.id.viewPagerVendor)
+            if (vp != null) {
+                val index = VendorPagerAdapter.Page.values().indexOf(VendorPagerAdapter.Page.LISTINGS)
+                vp.setCurrentItem(index, false)
+            }
+        }
+    }
+
+
+    private fun loadVendorData() {
+        val user = auth.currentUser ?: run {
+            swipeRefresh.isRefreshing = false
             return
         }
 
         val uid = user.uid
+        swipeRefresh.isRefreshing = true
 
-        // 1) Load user profile (collection: "users", doc: uid)
+        // -----------------------------------
+        // -----------------------------------
+// 1️⃣ LOAD VENDOR PROFILE
+// -----------------------------------
         db.collection("users").document(uid).get()
             .addOnSuccessListener { doc ->
                 if (doc != null && doc.exists()) {
-                    val firstName = doc.getString("firstName") ?: doc.getString("name") ?: ""
+
+                    val vendorName = doc.getString("vendorName") ?: ""   // ⭐ MAIN FIX
+                    val firstName = doc.getString("firstName") ?: ""
                     val lastName = doc.getString("lastName") ?: ""
                     val city = doc.getString("city") ?: ""
-                    val phone = doc.getString("phone") ?: user.phoneNumber ?: ""
+                    val phone = doc.getString("phone") ?: ""
 
+                    // Priority:
+                    // 1) vendorName
+                    // 2) firstName + lastName
+                    // 3) "Vendor"
                     val displayName = when {
-                        firstName.isNotBlank() && lastName.isNotBlank() -> "$firstName $lastName"
-                        firstName.isNotBlank() -> firstName
-                        else -> user.displayName ?: "Vendor"
+                        vendorName.isNotBlank() -> vendorName
+                        firstName.isNotBlank() -> "$firstName $lastName"
+                        else -> "Vendor"
                     }
 
                     tvGreeting.text = displayName
-                    tvLocationPhone.text = listOfNotNull(city.ifBlank { null }, phone.ifBlank { null })
-                        .joinToString(" • ")
-                        .ifBlank { "City • 03xx-xxxxxxx" }
+
+                    tvLocationPhone.text =
+                        listOf(city, phone).filter { it.isNotBlank() }.joinToString(" • ")
+
                 } else {
-                    // fallback
                     tvGreeting.text = user.displayName ?: "Vendor"
                     tvLocationPhone.text = "City • 03xx-xxxxxxx"
                 }
             }
             .addOnFailureListener {
-                // keep defaults
                 tvGreeting.text = user.displayName ?: "Vendor"
                 tvLocationPhone.text = "City • 03xx-xxxxxxx"
             }
 
-        // 2) Count active products for this vendor
-        // Assumes products collection has field "vendorId"
+
+
+        // -----------------------------------
+        // 2️⃣ LOAD PRODUCTS → clicks + ratings + count
+        // -----------------------------------
         db.collection("products")
             .whereEqualTo("vendorId", uid)
+            .whereEqualTo("isActive", true)
             .get()
             .addOnSuccessListener { snap ->
-                val count = snap.size()
-                tvActiveProducts.text = count.toString()
+
+                val products = snap.documents
+                val totalProducts = products.size
+                tvActiveProducts.text = totalProducts.toString()
+
+                var totalClicks = 0L
+                var totalRatingsSum = 0.0
+                var ratedProductsCount = 0
+
+                for (doc in products) {
+                    // CLICK SUM
+                    totalClicks += doc.getLong("clicks") ?: 0L
+
+                    // RATING SUM
+                    val avgR = doc.getDouble("avgRating") ?: 0.0
+                    val rCount = doc.getLong("ratingsCount")?.toInt() ?: 0
+
+                    if (rCount > 0) { // Only count rated products
+                        totalRatingsSum += avgR
+                        ratedProductsCount++
+                    }
+                }
+
+                // UPDATE DASHBOARD CLICKS
+                tvTotalClicks.text = totalClicks.toString()
+
+                // UPDATE DASHBOARD AVG RATING
+                val vendorAvgRating =
+                    if (ratedProductsCount > 0) totalRatingsSum / ratedProductsCount else 0.0
+
+                tvAvgRating.text = String.format("%.1f", vendorAvgRating)
+
+                // DONE
+                swipeRefresh.isRefreshing = false
             }
             .addOnFailureListener {
                 tvActiveProducts.text = "0"
+                tvTotalClicks.text = "0"
+                tvAvgRating.text = "0.0"
+                swipeRefresh.isRefreshing = false
             }
-
-        // 3) Active-products card click -> switch to Listings tab in VendorMainActivity
-        cardActiveProducts.setOnClickListener {
-            // Try to set bottom nav selected item (works because BottomNavigationView lives in the activity layout)
-            val activity = activity
-            if (activity != null) {
-                val bottomNav = activity.findViewById<BottomNavigationView>(R.id.bottomNavVendor)
-                if (bottomNav != null) {
-                    bottomNav.selectedItemId = R.id.nav_vendor_listings
-                    return@setOnClickListener
-                }
-
-                // fallback: try to find viewpager and set index directly (index of LISTINGS in VendorPagerAdapter)
-                val vp = activity.findViewById<androidx.viewpager2.widget.ViewPager2>(R.id.viewPagerVendor)
-                if (vp != null) {
-                    val index = VendorPagerAdapter.Page.values().indexOf(VendorPagerAdapter.Page.LISTINGS)
-                    vp.setCurrentItem(index, false)
-                }
-            }
-        }
     }
 }

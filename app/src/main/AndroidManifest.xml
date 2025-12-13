@@ -30,6 +30,12 @@
         android:theme="@style/Theme.FYP"
         tools:targetApi="31">
         <activity
+            android:name=".VendorEditProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".EditProductActivity"
+            android:exported="false" />
+        <activity
             android:name=".VendorProfileFragment"
             android:exported="false" />
         <activity
