@@ -7,6 +7,7 @@
     android:orientation="vertical"
     android:background="@color/white">
 
+    <!-- Header -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
@@ -44,6 +45,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <!-- Preview -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="360dp"
@@ -51,37 +53,31 @@
                 app:cardElevation="2dp"
                 android:layout_marginBottom="12dp">
 
-                <FrameLayout
+                <ImageView
+                    android:id="@+id/ivPreview"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent">
-
-                    <ImageView
-                        android:id="@+id/ivPreview"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:scaleType="centerCrop"/>
-
-                </FrameLayout>
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"/>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Summary -->
             <TextView
                 android:id="@+id/tvSummary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Mood"
+                android:text="Detected Mood"
                 android:textSize="16sp"
-                android:textColor="@color/black"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:textColor="@color/black"/>
 
-            <!-- Shows only the top predicted mood + accuracy (e.g., Happy (87.3%)) -->
             <TextView
                 android:id="@+id/tvSummaryText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="@color/text_muted"
-                android:layout_marginTop="6dp"
                 android:textSize="15sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:layout_marginTop="6dp"/>
 
             <View android:layout_width="match_parent" android:layout_height="8dp"/>
 
@@ -95,15 +91,13 @@
 
             <View android:layout_width="match_parent" android:layout_height="12dp"/>
 
-            <!-- RECOMMENDATIONS CARD (same style as eyes) -->
+            <!-- Recommendations -->
             <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardRecommendations"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
                 app:cardCornerRadius="10dp"
-                app:strokeWidth="0dp"
                 app:cardElevation="2dp"
+                app:strokeWidth="0dp"
                 app:cardBackgroundColor="@color/input_fill">
 
                 <LinearLayout
@@ -136,27 +130,49 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- products title (hidden usually, mood has no products) -->
+            <!-- PRODUCTS SECTION -->
             <TextView
                 android:id="@+id/tvProductsTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Products"
+                android:text="Recommended Products"
                 android:textStyle="bold"
-                android:layout_marginTop="12dp"
                 android:textColor="@color/black"
-                android:visibility="gone"/>
+                android:layout_marginTop="16dp"/>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvProducts"
                 android:layout_width="match_parent"
                 android:layout_height="170dp"
                 android:layout_marginTop="8dp"
-                android:visibility="gone"
                 android:scrollbars="horizontal"/>
+
+            <!-- Empty products message -->
+            <TextView
+                android:id="@+id/tvNoProducts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="No products available for this mood"
+                android:textColor="@color/text_muted"
+                android:layout_marginTop="8dp"
+                android:visibility="gone"/>
+
+            <!-- See more -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSeeMoreProducts"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="See more products"
+                android:textColor="@color/teal_bg"
+                android:backgroundTint="@android:color/white"
+                app:strokeColor="@color/teal_bg"
+                app:strokeWidth="2dp"
+                app:cornerRadius="12dp"
+                android:layout_marginTop="8dp"/>
 
             <View android:layout_width="match_parent" android:layout_height="12dp"/>
 
+            <!-- Action buttons -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -192,10 +208,9 @@
                 android:text="Go Home"
                 android:textColor="@color/teal_bg"
                 android:backgroundTint="@android:color/white"
-                app:cornerRadius="12dp"
                 app:strokeColor="@color/teal_bg"
                 app:strokeWidth="2dp"
-                android:layout_marginBottom="16dp"/>
+                app:cornerRadius="12dp"/>
 
             <TextView
                 android:id="@+id/tvDisclaimer"
@@ -203,9 +218,8 @@
                 android:layout_height="wrap_content"
                 android:text="Disclaimer: These are suggestions, not medical advice."
                 android:textSize="12sp"
-                android:textColor="@color/text_muted"/>
+                android:textColor="@color/text_muted"
+                android:layout_marginTop="8dp"/>
         </LinearLayout>
-
     </ScrollView>
-
 </LinearLayout>

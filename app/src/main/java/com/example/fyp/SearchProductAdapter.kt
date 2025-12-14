@@ -1,6 +1,5 @@
 package com.example.fyp
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,51 +8,50 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 
-class ProductAdapter(
-    private val ctx: Context,
+class SearchProductAdapter(
     private var list: List<Product>,
-    private val onClick: (Product) -> Unit
-) : RecyclerView.Adapter<ProductAdapter.Holder>() {
+    private val onProductClick: (Product) -> Unit
+) : RecyclerView.Adapter<SearchProductAdapter.Holder>() {
 
     inner class Holder(v: View) : RecyclerView.ViewHolder(v) {
         val img: ImageView = v.findViewById(R.id.imgProduct)
         val title: TextView = v.findViewById(R.id.tvTitle)
         val desc: TextView = v.findViewById(R.id.tvDesc)
+        val cat: TextView = v.findViewById(R.id.tvCategory)
+        val price: TextView = v.findViewById(R.id.tvPrice)
         val rating: TextView = v.findViewById(R.id.tvRating)
         val ratingCount: TextView = v.findViewById(R.id.tvRatingCount)
-        val category: TextView = v.findViewById(R.id.tvCategory)
-        val price: TextView = v.findViewById(R.id.tvPrice)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
         val v = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_eye_report_product, parent, false)
+            .inflate(R.layout.item_search_product, parent, false)
         return Holder(v)
     }
 
-    override fun onBindViewHolder(h: Holder, pos: Int) {
-        val p = list[pos]
+    override fun onBindViewHolder(h: Holder, position: Int) {
+        val p = list[position]
 
-        h.title.text = p.title
-        h.desc.text = p.description.take(60) + if (p.description.length > 60) "..." else ""
+        h.title.text = p.title.take(25) + if (p.title.length > 25) "…" else ""
+        h.desc.text = p.description.take(25) + if (p.description.length > 25) "…" else ""
 
-        h.rating.text = String.format("%.1f", p.avgRating)
+        h.cat.text = p.category
+        h.price.text = "PKR ${p.price ?: 0}"
+
+        h.rating.text = p.avgRating.toString()
         h.ratingCount.text = "(${p.ratingsCount})"
 
-        h.category.text = p.category
+        val imageUrl = p.images.firstOrNull()
 
-        h.price.text =
-            if (p.price != null) "${p.currency ?: "PKR"} ${p.price}" else "Price N/A"
-
-        Glide.with(ctx)
-            .load(p.images.firstOrNull())
+        Glide.with(h.itemView.context)
+            .load(imageUrl)
             .placeholder(R.drawable.img_product_placeholder)
             .into(h.img)
 
-        h.itemView.setOnClickListener { onClick(p) }
+        h.itemView.setOnClickListener { onProductClick(p) }
     }
 
-    override fun getItemCount() = list.size
+    override fun getItemCount(): Int = list.size
 
     fun update(newList: List<Product>) {
         list = newList

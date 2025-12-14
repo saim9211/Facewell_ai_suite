@@ -5,31 +5,27 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
-// Uploaded screenshot for reference (path in container):
-// /mnt/data/7f57d5ba-df8e-46d3-a173-eac603fef161.png
-
 class SplashActivity : AppCompatActivity() {
 
     private val phase1Ms = 600L   // white
-    private val phase2Ms = 1500L  // logo showing
-    private val phase3Ms = 600L   // white again
+    private val phase2Ms = 1500L  // logo
+    private val phase3Ms = 600L   // white
 
     private lateinit var auth: FirebaseAuth
     private val db by lazy { FirebaseFirestore.getInstance() }
 
-    // state flags
-    private var splashDone = false          // whether the 3-phase splash finished
-    private var authCheckDone = false       // whether auth+firestore check finished
-    private var routed = false              // whether we've already routed away
+    private var splashDone = false
+    private var authCheckDone = false
+    private var routed = false
 
-    // after auth check completes we store the target Intent here
     private var routingIntent: Intent? = null
 
-    private val mainHandler = Handler(Looper.getMainLooper())
+    private val handler = Handler(Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,29 +33,26 @@ class SplashActivity : AppCompatActivity() {
 
         auth = FirebaseAuth.getInstance()
 
-        // Begin background auth check immediately
+        // start auth + firestore check immediately
         checkLoginAndPrepareRoute()
 
-        // Play the 3-phase splash animation; only route after phases complete OR earlier if both done
         val logo = findViewById<View>(R.id.logo)
+
         // Phase 1
-        mainHandler.postDelayed({
+        handler.postDelayed({
             // Phase 2: show logo
             logo.visibility = View.VISIBLE
 
-            mainHandler.postDelayed({
-                // Phase 3: hide logo -> white
+            handler.postDelayed({
+                // Phase 3: hide logo
                 logo.visibility = View.GONE
 
-                mainHandler.postDelayed({
-                    // Splash finished
+                handler.postDelayed({
                     splashDone = true
-                    // If auth check already prepared a route, execute. Else, ensure fallback to Login
                     if (!routed) {
                         if (authCheckDone && routingIntent != null) {
                             startAndFinish(routingIntent!!)
                         } else {
-                            // authCheck not done yet — wait a short timeout for it to complete (avoid infinite wait)
                             waitForAuthThenRouteFallback()
                         }
                     }
@@ -71,52 +64,23 @@ class SplashActivity : AppCompatActivity() {
     }
 
     /**
-     * Kick off auth + Firestore check. Prepare routingIntent depending on result.
-     * Do not start activities here if splash hasn't finished; instead set routingIntent and when splashDone -> start.
+     * Auth + Firestore routing logic (NEW FLOW)
      */
     private fun checkLoginAndPrepareRoute() {
         val user = auth.currentUser
         if (user == null) {
-            // Not logged in => route to Login
             routingIntent = Intent(this, LoginActivity::class.java)
             authCheckDone = true
-            // If splash already done — route now
             if (splashDone && !routed) startAndFinish(routingIntent!!)
             return
         }
 
-        // Validate token quickly before calling Firestore to reduce invalid token cases.
+        // validate token first
         user.getIdToken(false)
             .addOnSuccessListener {
-                // token ok -> proceed to check user doc
-                val uid = user.uid
-                db.collection("users").document(uid)
-                    .get()
-                    .addOnSuccessListener { doc ->
-                        if (routed) return@addOnSuccessListener
-                        val stage = if (doc.exists()) (doc.getLong("stage") ?: 0L).toInt() else 0
-                        routingIntent = when {
-                            stage <= 0 -> Intent(this, CreateProfileActivity::class.java)
-                            stage == 1 -> Intent(this, SelectGenderActivity::class.java).apply {
-                                putExtra("firstName", doc.getString("firstName") ?: "")
-                            }
-                            else -> Intent(this, MainActivity::class.java)
-                        }
-                        authCheckDone = true
-                        if (splashDone && !routed) {
-                            startAndFinish(routingIntent!!)
-                        }
-                    }
-                    .addOnFailureListener {
-                        // Firestore read failed — fallback to Login
-                        if (routed) return@addOnFailureListener
-                        routingIntent = Intent(this, LoginActivity::class.java)
-                        authCheckDone = true
-                        if (splashDone && !routed) startAndFinish(routingIntent!!)
-                    }
+                goNextByStage()
             }
             .addOnFailureListener {
-                // Token fetch failed -> treat as not authenticated and route to Login
                 routingIntent = Intent(this, LoginActivity::class.java)
                 authCheckDone = true
                 if (splashDone && !routed) startAndFinish(routingIntent!!)
@@ -124,33 +88,96 @@ class SplashActivity : AppCompatActivity() {
     }
 
     /**
-     * If splash finished but auth check still running, wait a short amount for it to complete.
-     * If it doesn't complete in WAIT_FOR_AUTH_MS, fall back to Login to avoid blocking user forever.
+     * ✅ EXACT ROUTING LOGIC YOU PROVIDED
+     */
+    private fun goNextByStage() {
+        val uid = auth.currentUser?.uid
+        if (uid == null) {
+            authCheckDone = true
+            routingIntent = Intent(this, LoginActivity::class.java)
+            if (splashDone && !routed) startAndFinish(routingIntent!!)
+            return
+        }
+
+        db.collection("users").document(uid)
+            .get()
+            .addOnSuccessListener { doc ->
+                if (!doc.exists()) {
+                    Toast.makeText(this, "Profile not found.", Toast.LENGTH_LONG).show()
+                    routingIntent = Intent(this, LoginActivity::class.java)
+                    authCheckDone = true
+                    if (splashDone && !routed) startAndFinish(routingIntent!!)
+                    return@addOnSuccessListener
+                }
+
+                val stage = (doc.getLong("stage") ?: 0L).toInt()
+                val userType = doc.getString("userType") ?: ""
+
+                routingIntent = when {
+                    // Stage 0 → select account type
+                    stage <= 0 -> Intent(this, SelectUserTypeActivity::class.java)
+
+                    // Stage 1 → profile creation
+                    stage == 1 -> {
+                        when (userType) {
+                            "user" -> Intent(this, CreateProfileActivity::class.java)
+                            "vendor" -> Intent(this, VendorCreateProfileActivity::class.java)
+                            "clinic" -> Intent(this, ClinicCreateProfileActivity::class.java)
+                            else -> Intent(this, SelectUserTypeActivity::class.java)
+                        }
+                    }
+
+                    // Stage 2 → main flows
+                    stage == 2 -> {
+                        when (userType) {
+                            "user" -> Intent(this, MainActivity::class.java)
+                            "vendor" -> Intent(this, VendorMainActivity::class.java)
+                            "clinic" -> Intent(this, ClinicMainActivity::class.java)
+                            else -> Intent(this, MainActivity::class.java)
+                        }
+                    }
+
+                    else -> Intent(this, SelectUserTypeActivity::class.java)
+                }
+
+                authCheckDone = true
+                if (splashDone && !routed) {
+                    startAndFinish(routingIntent!!)
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Could not load profile. Try again.", Toast.LENGTH_LONG).show()
+                routingIntent = Intent(this, LoginActivity::class.java)
+                authCheckDone = true
+                if (splashDone && !routed) startAndFinish(routingIntent!!)
+            }
+    }
+
+    /**
+     * Safety fallback
      */
     private fun waitForAuthThenRouteFallback() {
-        val WAIT_FOR_AUTH_MS = 800L
-        mainHandler.postDelayed({
+        handler.postDelayed({
             if (routed) return@postDelayed
             if (authCheckDone && routingIntent != null) {
                 startAndFinish(routingIntent!!)
             } else {
-                // Fallback: open Login
                 startAndFinish(Intent(this, LoginActivity::class.java))
             }
-        }, WAIT_FOR_AUTH_MS)
+        }, 800L)
     }
 
     private fun startAndFinish(intent: Intent) {
         if (routed) return
         routed = true
-        startActivity(intent.apply {
-            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-        })
+        startActivity(
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
         finish()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        mainHandler.removeCallbacksAndMessages(null)
+        handler.removeCallbacksAndMessages(null)
     }
 }

@@ -18,6 +18,7 @@ import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.fyp.models.Report
 import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
@@ -33,6 +34,7 @@ class ReportsFragment : Fragment(R.layout.activity_reports_fragment) {
 
     private lateinit var rvReports: RecyclerView
     private lateinit var emptyPlaceholder: View
+    private lateinit var swipeRefresh: SwipeRefreshLayout
 
     private lateinit var btnEye: MaterialButton
     private lateinit var btnSkin: MaterialButton
@@ -40,9 +42,7 @@ class ReportsFragment : Fragment(R.layout.activity_reports_fragment) {
     private lateinit var btnGeneral: MaterialButton
 
     private var allReports = mutableListOf<Report>()
-    // default to "eye" so Eye tab is active when fragment opens
-    private var currentFilter = "eye" // "general" means show only general reports
-
+    private var currentFilter = "eye"
 
     private val userUpdatedReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -55,6 +55,7 @@ class ReportsFragment : Fragment(R.layout.activity_reports_fragment) {
 
         rvReports = view.findViewById(R.id.rvReports)
         emptyPlaceholder = view.findViewById(R.id.emptyPlaceholder)
+        swipeRefresh = view.findViewById(R.id.swipeRefresh)
 
         btnEye = view.findViewById(R.id.btnEye)
         btnSkin = view.findViewById(R.id.btnSkin)
@@ -62,7 +63,12 @@ class ReportsFragment : Fragment(R.layout.activity_reports_fragment) {
         btnGeneral = view.findViewById(R.id.btnGeneral)
 
         rvReports.layoutManager = LinearLayoutManager(requireContext())
-        rvReports.adapter = ReportAdapter(listOf(), { /* placeholder */ }, null)
+        rvReports.adapter = ReportAdapter(listOf(), { }, null)
+
+        // Swipe refresh listener
+        swipeRefresh.setOnRefreshListener {
+            loadReportsFromFirestore()
+        }
 
         btnEye.setOnClickListener { applyFilter("eye") }
         btnSkin.setOnClickListener { applyFilter("skin") }
@@ -71,7 +77,6 @@ class ReportsFragment : Fragment(R.layout.activity_reports_fragment) {
 
         currentFilter = "eye"
         applyFilter("eye")
-
         updateFilterButtons()
 
         LocalBroadcastManager.getInstance(requireContext())
@@ -84,7 +89,7 @@ class ReportsFragment : Fragment(R.layout.activity_reports_fragment) {
         super.onDestroyView()
         try {
             LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(userUpdatedReceiver)
-        } catch (_: Exception) { /* ignore */ }
+        } catch (_: Exception) { }
     }
 
     private fun updateFilterButtons() {
@@ -101,8 +106,6 @@ class ReportsFragment : Fragment(R.layout.activity_reports_fragment) {
         mark(btnSkin, currentFilter == "skin")
         mark(btnMood, currentFilter == "mood")
         mark(btnGeneral, currentFilter == "general")
-
-
     }
 
     private fun applyFilter(type: String) {
@@ -113,47 +116,37 @@ class ReportsFragment : Fragment(R.layout.activity_reports_fragment) {
 
     private fun loadReportsFromFirestore() {
         val uid = auth.currentUser?.uid ?: return
+
         db.collection("reports")
             .whereEqualTo("userId", uid)
             .get()
             .addOnSuccessListener { snap ->
                 allReports.clear()
+
                 for (doc in snap.documents) {
-                    try {
-                        val rpt = doc.toObject(Report::class.java)
-                        if (rpt != null) {
-                            if (rpt.reportId.isNullOrBlank()) {
-                                val newRpt = rpt.copy(reportId = doc.id)
-                                allReports.add(newRpt)
-                            } else {
-                                allReports.add(rpt)
-                            }
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
+                    val rpt = doc.toObject(Report::class.java)
+                    if (rpt != null) {
+                        val finalRpt = if (rpt.reportId.isNullOrBlank()) rpt.copy(reportId = doc.id) else rpt
+                        allReports.add(finalRpt)
                     }
                 }
+
                 showReportsForFilter()
+                swipeRefresh.isRefreshing = false
             }
             .addOnFailureListener { e ->
                 e.printStackTrace()
                 allReports.clear()
                 showReportsForFilter()
+                swipeRefresh.isRefreshing = false
             }
     }
 
     private fun showReportsForFilter() {
         val filtered = when (currentFilter) {
-            "general" -> {
-                // show only general (full-face) reports
-                allReports.filter { it.type.equals("general", ignoreCase = true) }
-                    .sortedByDescending { it.createdAt?.toDate()?.time ?: 0L }
-            }
-            else -> {
-                allReports.filter { it.type.equals(currentFilter, ignoreCase = true) }
-                    .sortedByDescending { it.createdAt?.toDate()?.time ?: 0L }
-            }
-        }
+            "general" -> allReports.filter { it.type.equals("general", true) }
+            else -> allReports.filter { it.type.equals(currentFilter, true) }
+        }.sortedByDescending { it.createdAt?.toDate()?.time ?: 0L }
 
         if (filtered.isEmpty()) {
             rvReports.visibility = View.GONE

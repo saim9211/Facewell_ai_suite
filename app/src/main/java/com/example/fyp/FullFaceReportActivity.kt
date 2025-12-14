@@ -12,6 +12,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -20,6 +21,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import com.google.firebase.Timestamp
@@ -64,6 +66,15 @@ class FullFaceReportActivity : AppCompatActivity() {
     private lateinit var llEyeTipsCard: LinearLayout
     private lateinit var llMoodTipsCard: LinearLayout
     private lateinit var rvSkinPatches: RecyclerView
+
+    private lateinit var rvProducts: RecyclerView
+    private lateinit var tvEyeProductsTitle: TextView
+    private lateinit var btnSeeMoreProducts: Button
+
+    private val fullFaceProducts = mutableListOf<Product>()
+
+
+
 
     // rec summaries inside cards
     private lateinit var tvSkinRecSummary: TextView
@@ -112,8 +123,12 @@ class FullFaceReportActivity : AppCompatActivity() {
         tvSkinAcc = findViewById(R.id.tvSkinAcc)
         tvEyeAcc = findViewById(R.id.tvEyeAcc)
         tvMoodAcc = findViewById(R.id.tvMoodAcc)
+        rvProducts = findViewById(R.id.rvProducts)
+        tvEyeProductsTitle = findViewById(R.id.tvEyeProductsTitle)
+
 
         btnSave = findViewById(R.id.btnSaveReport)
+        btnSeeMoreProducts= findViewById(R.id.btnSeeMoreProducts)
         btnVisit = findViewById(R.id.btnVisitClinic)
         btnGoHome = findViewById(R.id.btnGoHome)
         btnBack = findViewById(R.id.btnBack)
@@ -128,6 +143,10 @@ class FullFaceReportActivity : AppCompatActivity() {
 
         rvSkinPatches = findViewById(R.id.rvSkinPatches)
         rvSkinPatches.layoutManager = GridLayoutManager(this, 2, RecyclerView.VERTICAL, false)
+
+        rvProducts.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+
 
         btnBack.setOnClickListener { finish() }
 
@@ -168,30 +187,36 @@ class FullFaceReportActivity : AppCompatActivity() {
 
         Thread {
             try {
-                // EYE
+                // ===================== EYE =====================
                 val eyeRes = MLUtils.detectAndCropEyesBlocking(bmp)
                 runOnUiThread {
                     llEyeTipsCard.removeAllViews()
                     tvEyeRecSummary.text = ""
                 }
+
+                var eyeKeyForProducts = "normal"
+
                 if (eyeRes.leftCrop != null && eyeRes.rightCrop != null) {
-                    val (lPair, rPair, overall) = MLUtils.runEyeModel(eyeInterpreter, eyeRes.leftCrop!!, eyeRes.rightCrop!!)
+                    val (lPair, rPair, overall) =
+                        MLUtils.runEyeModel(eyeInterpreter, eyeRes.leftCrop!!, eyeRes.rightCrop!!)
+
                     val topKey = if (lPair.second >= rPair.second) lPair.first else rPair.first
+                    eyeKeyForProducts = topKey.replace("\\s".toRegex(), "").lowercase()
+
                     val leftText = "${lPair.first} (${(lPair.second * 100).toInt()}%)"
                     val rightText = "${rPair.first} (${(rPair.second * 100).toInt()}%)"
                     val eyeAcc = overall * 100f
 
-                    val rec = RecommendationProvider.getEyeRecommendation(topKey.replace("\\s".toRegex(), "").lowercase())
+                    val rec = RecommendationProvider.getEyeRecommendation(eyeKeyForProducts)
 
-                    // store last eye info for saving
                     lastEyeSummary = "Left: $leftText • Right: $rightText"
                     lastEyeAccuracy = overall.toDouble()
                     lastEyeRecommendations = rec?.tips ?: emptyList()
 
-                    // attempt to save left/right crops to cache URIs so report can reference them (non-blocking)
                     lastEyeLeftUrl = try {
                         saveBitmapToCache(eyeRes.leftCrop!!, "left_eye_${System.currentTimeMillis()}")?.toString()
                     } catch (e: Exception) { null }
+
                     lastEyeRightUrl = try {
                         saveBitmapToCache(eyeRes.rightCrop!!, "right_eye_${System.currentTimeMillis()}")?.toString()
                     } catch (e: Exception) { null }
@@ -202,82 +227,88 @@ class FullFaceReportActivity : AppCompatActivity() {
                         tvEyeRecSummary.text = rec?.summary ?: "Follow general eye care steps."
                         llEyeTipsCard.removeAllViews()
                         rec?.tips?.forEach { tip ->
-                            val tv = layoutInflater.inflate(android.R.layout.simple_list_item_1, llEyeTipsCard, false) as TextView
+                            val tv = layoutInflater.inflate(
+                                android.R.layout.simple_list_item_1,
+                                llEyeTipsCard,
+                                false
+                            ) as TextView
                             tv.text = "\u2022  $tip"
                             tv.setTextColor(resources.getColor(R.color.black))
                             tv.setTextSize(14f)
                             llEyeTipsCard.addView(tv)
                         }
                     }
-                } else {
-                    runOnUiThread {
-                        tvEyeLabel.text = "Not detected"
-                        tvEyeAcc.text = "Accuracy Level: 0.0%"
-                        lastEyeSummary = "Not detected"
-                        lastEyeAccuracy = 0.0
-                        lastEyeRecommendations = emptyList()
-                    }
                 }
 
-                // SKIN
+                // ===================== SKIN =====================
                 val skinInputTensor = skinInterpreter.getInputTensor(0)
                 val skinShape = skinInputTensor.shape()
                 val sH = if (skinShape.size >= 3) skinShape[1] else 128
                 val sW = if (skinShape.size >= 3) skinShape[2] else 128
                 val sChannels = if (skinShape.size >= 4) skinShape[3] else 3
-                var sScale = 1.0f; var sZp = 0
+                var sScale = 1.0f
+                var sZp = 0
+
                 try {
                     val q = skinInputTensor.quantizationParams()
-                    sScale = q.scale; sZp = q.zeroPoint
+                    sScale = q.scale
+                    sZp = q.zeroPoint
                 } catch (_: Exception) {}
 
-                val (patches, aggProbs) = MLUtils.analyzePatchesFromSelfieBlocking(bmp, skinInterpreter, skinLabels, sW, sH, sChannels,
-                    skinInputTensor.dataType(), sScale, sZp)
+                val (patches, aggProbs) =
+                    MLUtils.analyzePatchesFromSelfieBlocking(
+                        bmp,
+                        skinInterpreter,
+                        skinLabels,
+                        sW,
+                        sH,
+                        sChannels,
+                        skinInputTensor.dataType(),
+                        sScale,
+                        sZp
+                    )
 
                 skinPatchResults.clear()
                 skinPatchResults.addAll(patches)
 
-                var finalLabel = "unknown"; var finalIdx = 0
+                var finalLabel = "normal"
+                var finalIdx = 0
+
                 if (skinPatchResults.isNotEmpty()) {
                     val counts = mutableMapOf<String, Int>()
-                    for (pr in skinPatchResults) counts[pr.label] = (counts[pr.label] ?: 0) + 1
+                    for (pr in skinPatchResults)
+                        counts[pr.label] = (counts[pr.label] ?: 0) + 1
+
                     val maxCount = counts.values.maxOrNull() ?: 0
-                    val labelsWithMax = counts.filter { it.value == maxCount }.keys.toList()
-                    if (maxCount >= 3) {
-                        finalLabel = labelsWithMax.first()
-                    } else if (maxCount == 2) {
-                        val bestAggIdx = aggProbs.indices.maxByOrNull { aggProbs[it] } ?: 0
-                        finalLabel = skinLabels.getOrNull(bestAggIdx) ?: labelsWithMax.first()
-                    } else {
-                        val bestAggIdx = aggProbs.indices.maxByOrNull { aggProbs[it] } ?: 0
-                        finalLabel = skinLabels.getOrNull(bestAggIdx) ?: "unknown"
-                    }
+                    finalLabel = counts.maxByOrNull { it.value }?.key ?: "normal"
                     finalIdx = skinLabels.indexOf(finalLabel).coerceAtLeast(0)
                 }
 
-                val finalProb = if (aggProbs.isNotEmpty() && finalIdx in aggProbs.indices) aggProbs[finalIdx] else 0f
-                val displaySkinSummary = if (skinPatchResults.isEmpty()) {
-                    MLUtils.coarseLabelBySampling(bmp, skinInterpreter, skinLabels, sW, sH, sChannels, skinInputTensor.dataType(), sScale, sZp)
-                } else {
-                    finalLabel.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-                }
+                val finalProb =
+                    if (aggProbs.isNotEmpty() && finalIdx in aggProbs.indices)
+                        aggProbs[finalIdx]
+                    else 0f
 
-                val skinRecKey = finalLabel.replace("\\s".toRegex(), "").lowercase()
-                val skinRec = RecommendationProvider.getSkinRecommendation(skinRecKey)
+                val skinKeyForProducts = finalLabel.replace("\\s".toRegex(), "").lowercase()
+                val skinRec = RecommendationProvider.getSkinRecommendation(skinKeyForProducts)
 
-                // store last skin info for saving
-                lastSkinSummary = displaySkinSummary
+                lastSkinSummary = finalLabel
                 lastSkinAccuracy = finalProb.toDouble()
                 lastSkinRecommendations = skinRec?.tips ?: emptyList()
 
                 runOnUiThread {
-                    tvSkinLabel.text = displaySkinSummary
-                    tvSkinAcc.text = "Accuracy Level: ${String.format("%.1f", finalProb * 100.0)}%"
+                    tvSkinLabel.text =
+                        finalLabel.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+                    tvSkinAcc.text = "Accuracy Level: ${String.format("%.1f", finalProb * 100)}%"
                     rvSkinPatches.adapter = PatchAdapter(skinPatchResults)
                     tvSkinRecSummary.text = skinRec?.summary ?: "Follow general skin care steps."
                     llSkinTips.removeAllViews()
                     skinRec?.tips?.forEach { tip ->
-                        val tv = layoutInflater.inflate(android.R.layout.simple_list_item_1, llSkinTips, false) as TextView
+                        val tv = layoutInflater.inflate(
+                            android.R.layout.simple_list_item_1,
+                            llSkinTips,
+                            false
+                        ) as TextView
                         tv.text = "\u2022  $tip"
                         tv.setTextColor(resources.getColor(R.color.black))
                         tv.setTextSize(14f)
@@ -285,33 +316,54 @@ class FullFaceReportActivity : AppCompatActivity() {
                     }
                 }
 
-                // MOOD
+                // ===================== MOOD =====================
                 val moodInputT = moodInterpreter.getInputTensor(0)
                 val mShape = moodInputT.shape()
                 val mH = if (mShape.size >= 3) mShape[1] else 48
                 val mW = if (mShape.size >= 3) mShape[2] else 48
                 val mChannels = if (mShape.size >= 4) mShape[3] else 1
-                val (mTop, mConf) = MLUtils.runMoodOnBitmapForTopBlocking(bmp, moodInterpreter, mW, mH, mChannels, moodInputT.dataType())
 
-                val moodRec = RecommendationProvider.getMoodRecommendation(mTop.replace("\\s".toRegex(), "").lowercase())
+                val (mTop, mConf) =
+                    MLUtils.runMoodOnBitmapForTopBlocking(
+                        bmp,
+                        moodInterpreter,
+                        mW,
+                        mH,
+                        mChannels,
+                        moodInputT.dataType()
+                    )
 
-                // store last mood info for saving
+                val moodKeyForProducts = mTop.replace("\\s".toRegex(), "").lowercase()
+                val moodRec = RecommendationProvider.getMoodRecommendation(moodKeyForProducts)
+
                 lastMoodSummary = mTop
                 lastMoodAccuracy = mConf
                 lastMoodRecommendations = moodRec?.tips ?: emptyList()
 
                 runOnUiThread {
-                    tvMoodLabel.text = mTop.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+                    tvMoodLabel.text =
+                        mTop.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
                     tvMoodAcc.text = "Accuracy Level: ${String.format("%.1f", mConf)}%"
                     tvMoodRecSummary.text = moodRec?.summary ?: "Follow general mood care steps."
                     llMoodTipsCard.removeAllViews()
                     moodRec?.tips?.forEach { tip ->
-                        val tv = layoutInflater.inflate(android.R.layout.simple_list_item_1, llMoodTipsCard, false) as TextView
+                        val tv = layoutInflater.inflate(
+                            android.R.layout.simple_list_item_1,
+                            llMoodTipsCard,
+                            false
+                        ) as TextView
                         tv.text = "\u2022  $tip"
                         tv.setTextColor(resources.getColor(R.color.black))
                         tv.setTextSize(14f)
                         llMoodTipsCard.addView(tv)
                     }
+
+                    // 🔥🔥 FETCH FULL FACE PRODUCTS HERE (FINAL + CORRECT PLACE)
+                    fetchFullFaceProducts(
+                        eyeKeyForProducts,
+                        skinKeyForProducts,
+                        moodKeyForProducts
+                    )
                 }
 
             } catch (e: Exception) {
@@ -321,10 +373,13 @@ class FullFaceReportActivity : AppCompatActivity() {
                 }
             } finally {
                 runOnUiThread {
-                    try { if (dlg.isShowing) dlg.dismiss() } catch (_: Exception) {}
+                    try {
+                        if (dlg.isShowing) dlg.dismiss()
+                    } catch (_: Exception) {}
                 }
             }
         }.start()
+
 
         // Save report (updated methodology)
         btnSave.setOnClickListener {
@@ -394,6 +449,70 @@ class FullFaceReportActivity : AppCompatActivity() {
             startActivity(i); finish()
         }
     }
+
+    private fun fetchFullFaceProducts(
+        eyeKey: String,
+        skinKey: String,
+        moodKey: String
+    ) {
+        fullFaceProducts.clear()
+
+        val queries = listOf(
+            Triple("eye", eyeKey, "eye"),
+            Triple("skin", skinKey, "skin"),
+            Triple("mood", moodKey, "mood")
+        )
+
+        var completed = 0
+
+        for ((category, key, _) in queries) {
+            db.collection("products")
+                .whereEqualTo("category", category)
+                .whereEqualTo("isActive", true)
+                .whereArrayContains("recommendedFor", key)
+//                .orderBy("avgRating", Query.Direction.DESCENDING)
+                .limit(1)
+                .get()
+                .addOnSuccessListener { snap ->
+                    snap.documents.firstOrNull()?.toObject(Product::class.java)?.let {
+                        fullFaceProducts.add(it)
+                    }
+                }
+                .addOnCompleteListener {
+                    completed++
+                    if (completed == queries.size) {
+                        showFullFaceProducts()
+                    }
+                }
+        }
+    }
+
+    private fun showFullFaceProducts() {
+        if (fullFaceProducts.isNotEmpty()) {
+            tvEyeProductsTitle.visibility = View.VISIBLE
+            rvProducts.visibility = View.VISIBLE
+            btnSeeMoreProducts.visibility = View.VISIBLE
+
+            rvProducts.adapter = ProductAdapter(this, fullFaceProducts) { product ->
+                ProductDetailBottomSheet
+                    .newInstance(product)
+                    .show(supportFragmentManager, "product_detail")
+            }
+
+            btnSeeMoreProducts.setOnClickListener {
+                startActivity(
+                    Intent(this, SearchProductsActivity::class.java)
+                        .putExtra("from", "full_face")
+                )
+            }
+        } else {
+            tvEyeProductsTitle.text = "No recommended products found"
+            rvProducts.visibility = View.GONE
+            btnSeeMoreProducts.visibility = View.GONE
+        }
+    }
+
+
 
     private fun loadLabels(fileName: String): List<String> {
         return try {

@@ -21,13 +21,18 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.example.fyp.utils.MLUtils
+import com.example.fyp.utils.ModelLoader
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.storage.FirebaseStorage
 import org.tensorflow.lite.DataType
@@ -40,8 +45,6 @@ import java.nio.ByteOrder
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
-import com.example.fyp.utils.ModelLoader
-import com.example.fyp.utils.MLUtils
 
 class SkinReportActivity : AppCompatActivity() {
 
@@ -52,6 +55,7 @@ class SkinReportActivity : AppCompatActivity() {
         const val TAG = "SkinReportActivity"
     }
 
+    // Views
     private lateinit var ivPreview: ImageView
     private lateinit var ivHeatmap: ImageView
     private lateinit var tvSummaryText: TextView
@@ -65,6 +69,12 @@ class SkinReportActivity : AppCompatActivity() {
     private lateinit var rvPatches: RecyclerView
     private lateinit var tvPatchesTitle: TextView
 
+    // ⭐ NEW PRODUCT VIEW BINDINGS
+    private lateinit var rvProducts: RecyclerView
+    private lateinit var tvProductsTitle: TextView
+    private lateinit var btnSeeMoreProducts: MaterialButton
+
+    // Data
     private lateinit var interpreter: Interpreter
     private var labels: List<String> = emptyList()
     private var inputH = 128
@@ -89,11 +99,77 @@ class SkinReportActivity : AppCompatActivity() {
 
     data class PatchResult(val bmp: Bitmap, val label: String, val confidence: Double)
 
+    // ---------------------------------------------------------------------------------------------
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_skin_report)
 
+        bindViews()
+        btnBack.setOnClickListener { finish() }
+
+        RecommendationProvider.loadFromAssets(this, "skin_recommendations.json")
+
+        labels = loadLabels(LABELS_FILE)
+        loadModel()
+
+        val imgUriStr = intent.getStringExtra(EXTRA_IMAGE_URI)
+            ?: intent.getStringExtra("extra_image_uri")
+        if (imgUriStr.isNullOrEmpty()) { finish(); return }
+        previewUriStr = imgUriStr
+
+        val imgUri = Uri.parse(imgUriStr)
+        val bmp = MLUtils.decodeBitmap(contentResolver, imgUri) ?: run {
+            Toast.makeText(this, "Failed to load image", Toast.LENGTH_SHORT).show()
+            finish(); return
+        }
+        ivPreview.setImageBitmap(bmp)
+
+        rvPatches.layoutManager = GridLayoutManager(this, 2)
+        rvPatches.adapter = PatchAdapter(patchResults)
+
+        val loader = showLoader()
+
+        Thread {
+            try {
+                processSkin(bmp)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                runOnUiThread {
+                    Toast.makeText(this, "Skin analysis failed: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            } finally {
+                runOnUiThread { loader.dismiss() }
+            }
+        }.start()
+
+        btnSave.setOnClickListener { saveReport() }
+
+        btnVisit.setOnClickListener {
+            val i = Intent(this, MainActivity::class.java)
+            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            i.putExtra("open_tab", "clinics")
+            startActivity(i)
+            finish()
+        }
+
+        btnGoHome.setOnClickListener {
+            val i = Intent(this, MainActivity::class.java)
+            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            i.putExtra("open_tab", "home")
+            startActivity(i)
+            finish()
+        }
+
+        // ⭐ SEE MORE → SearchProductsActivity(category=skin)
+        btnSeeMoreProducts.setOnClickListener {
+            val i = Intent(this, SearchProductsActivity::class.java)
+            i.putExtra("category", "skin")
+            startActivity(i)
+        }
+    }
+
+    private fun bindViews() {
         ivPreview = findViewById(R.id.ivPreview)
         ivHeatmap = findViewById(R.id.ivHeatmap)
         tvSummaryText = findViewById(R.id.tvSummaryText)
@@ -107,207 +183,79 @@ class SkinReportActivity : AppCompatActivity() {
         rvPatches = findViewById(R.id.rvPatches)
         tvPatchesTitle = findViewById(R.id.tvPatchesTitle)
 
-        btnBack.setOnClickListener { finish() }
+        // ⭐ PRODUCT VIEWS
+        rvProducts = findViewById(R.id.rvProducts)
+        tvProductsTitle = findViewById(R.id.tvProductsTitle)
+        btnSeeMoreProducts = findViewById(R.id.btnSeeMoreProducts)
+    }
 
-        RecommendationProvider.loadFromAssets(this, "skin_recommendations.json")
-
-        labels = loadLabels(LABELS_FILE)
+    private fun loadModel() {
         try {
-            // use ModelLoader helper
             interpreter = ModelLoader.loadModelFromAssets(this, MODEL_NAME)
             val t = interpreter.getInputTensor(0)
             val shape = t.shape()
             if (shape.size >= 3) { inputH = shape[1]; inputW = shape[2] }
             inputDataType = t.dataType()
             inputChannels = if (shape.size >= 4) shape[3] else 3
-            try {
-                val q = t.quantizationParams()
-                inputScale = q.scale
-                inputZeroPoint = q.zeroPoint
-            } catch (_: Exception) { }
+            val q = t.quantizationParams()
+            inputScale = q.scale
+            inputZeroPoint = q.zeroPoint
         } catch (e: Exception) {
-            e.printStackTrace()
             Toast.makeText(this, "Failed to load model", Toast.LENGTH_SHORT).show()
-            finish(); return
-        }
-
-        val imageUriStr = intent.getStringExtra(EXTRA_IMAGE_URI) ?: intent.getStringExtra("extra_image_uri")
-        if (imageUriStr.isNullOrEmpty()) { finish(); return }
-        val imageUri = Uri.parse(imageUriStr)
-        previewUriStr = imageUri.toString()
-
-        // decode via helper (EXIF-aware)
-        val bmp = MLUtils.decodeBitmap(contentResolver, imageUri) ?: run {
-            Toast.makeText(this, "Failed to load image", Toast.LENGTH_SHORT).show(); finish(); return
-        }
-        ivPreview.setImageBitmap(bmp)
-
-        rvPatches.layoutManager = GridLayoutManager(this, 2, RecyclerView.VERTICAL, false)
-        rvPatches.adapter = PatchAdapter(patchResults)
-
-        val loader = Dialog(this)
-        val loaderView = LayoutInflater.from(this).inflate(R.layout.dialog_simple_loader, null)
-        loader.setContentView(loaderView)
-        loader.setCancelable(false)
-        loader.window?.setBackgroundDrawableResource(android.R.color.transparent)
-        loader.show()
-
-        Thread {
-            try {
-                // Use helper to run the heavy coarse label sampling used later for patches
-                val summary = runSkinOnBitmap(bmp) // heatmap + summary (preserves original heatmap behavior)
-
-                // use MLUtils analyze helper to get patches + aggregated probabilities (mapping to local PatchResult)
-                val (validPatchesFromHelper, aggProbs) = MLUtils.analyzePatchesFromSelfieBlocking(
-                    bmp,
-                    interpreter,
-                    labels,
-                    inputW, inputH, inputChannels,
-                    inputDataType,
-                    inputScale, inputZeroPoint
-                )
-                // map MLUtils.PatchResult -> local PatchResult (signature compatible)
-                patchResults.clear()
-                for (p in validPatchesFromHelper) {
-                    patchResults.add(PatchResult(p.bmp, p.label, p.confidence))
-                }
-
-                val totalPatches = patchResults.size
-                var finalLabel = "unknown"
-                var finalCount = 0
-                var finalIdx = 0
-
-                if (totalPatches > 0) {
-                    val counts = mutableMapOf<String, Int>()
-                    for (pr in patchResults) {
-                        counts[pr.label] = (counts[pr.label] ?: 0) + 1
-                    }
-                    val maxCount = counts.values.maxOrNull() ?: 0
-                    val labelsWithMax = counts.filter { it.value == maxCount }.keys.toList()
-
-                    if (maxCount >= 3) {
-                        finalLabel = labelsWithMax.first()
-                    } else if (maxCount == 2) {
-                        val bestAggIdx = aggProbs.indices.maxByOrNull { aggProbs[it] } ?: 0
-                        finalLabel = labels.getOrNull(bestAggIdx) ?: labelsWithMax.first()
-                    } else {
-                        val bestAggIdx = aggProbs.indices.maxByOrNull { aggProbs[it] } ?: 0
-                        finalLabel = labels.getOrNull(bestAggIdx) ?: "unknown"
-                    }
-
-                    finalCount = counts[finalLabel] ?: 0
-                    finalIdx = labels.indexOf(finalLabel).coerceAtLeast(0)
-                }
-
-                val finalProb = if (aggProbs.isNotEmpty() && finalIdx in aggProbs.indices) aggProbs[finalIdx] else 0f
-
-                lastFinalLabel = finalLabel
-                lastFinalProb = finalProb
-
-                val displaySummary = if (patchResults.isEmpty()) {
-                    summary
-                } else {
-                    finalLabel.replaceFirstChar {
-                        if (it.isLowerCase()) it.titlecase() else it.toString()
-                    }
-                }
-
-                // compute recommendations (save them for the report save)
-                val recKey = finalLabel.replace("\\s".toRegex(), "").lowercase()
-                val rec = RecommendationProvider.getSkinRecommendation(recKey)
-                val recTips = rec?.tips ?: emptyList()
-                lastRecommendations = recTips
-
-                runOnUiThread {
-                    tvSummaryText.text = displaySummary
-                    tvAccuracyLabel.text = "Accuracy Level: ${String.format("%.1f", finalProb * 100.0)}%"
-                    rvPatches.adapter?.notifyDataSetChanged()
-                    tvRecSummary.text = rec?.summary ?: "Follow general skin care steps."
-                    llTips.removeAllViews()
-                    rec?.tips?.forEach { tip ->
-                        val tv = layoutInflater.inflate(android.R.layout.simple_list_item_1, llTips, false) as TextView
-                        tv.text = "\u2022  $tip"
-                        tv.setTextColor(resources.getColor(R.color.black))
-                        tv.setTextSize(14f)
-                        llTips.addView(tv)
-                    }
-                    ivHeatmap.visibility = View.VISIBLE
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                runOnUiThread { Toast.makeText(this, "Skin analysis failed: ${e.message}", Toast.LENGTH_LONG).show() }
-            } finally {
-                runOnUiThread {
-                    try { if (loader.isShowing) loader.dismiss() } catch (_: Exception) {}
-                }
-            }
-        }.start()
-
-        btnSave.setOnClickListener {
-            val uid = auth.currentUser?.uid
-            if (uid == null) {
-                Toast.makeText(this, "Not authenticated. Please login.", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            btnSave.isEnabled = false
-            btnSave.text = "Saving..."
-            val summary = tvSummaryText.text.toString()
-            val topLabel = if (lastFinalLabel.isNotEmpty() && lastFinalLabel != "unknown") {
-                lastFinalLabel
-            } else {
-                if (patchResults.isNotEmpty()) patchResults.maxByOrNull { it.confidence }?.label ?: "unknown" else "unknown"
-            }
-            val recsToSave = lastRecommendations // computed earlier
-            uploadImagesAndSaveReport(uid, previewUriStr, faceHeatmapUriStr, type = "skin",
-                summary = summary, topLabel = topLabel, confidence = lastFinalProb.toDouble(), recommendations = recsToSave) { success ->
-                runOnUiThread {
-                    btnSave.isEnabled = true
-                    btnSave.text = "Save Report"
-                    if (success) {
-                        Toast.makeText(this, "Report saved", Toast.LENGTH_SHORT).show()
-                        // fetch updated user doc and navigate like Eye flow (so MainActivity receives updated_user_map)
-                        val userDoc = db.collection("users").document(uid)
-                        userDoc.get().addOnSuccessListener { snap ->
-                            val userMap = snap.data ?: emptyMap<String, Any>()
-                            val i = Intent(this, MainActivity::class.java)
-                            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                            i.putExtra("open_tab", "home")
-                            val serializableMap = HashMap(userMap)
-                            i.putExtra("updated_user_map", serializableMap)
-                            startActivity(i)
-                            finish()
-                        }.addOnFailureListener {
-                            val i = Intent(this, MainActivity::class.java)
-                            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                            i.putExtra("open_tab", "home")
-                            startActivity(i)
-                            finish()
-                        }
-                    } else {
-                        Toast.makeText(this, "Failed to save report", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-        }
-
-        btnVisit.setOnClickListener {
-            val i = Intent(this, MainActivity::class.java)
-            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-            i.putExtra("open_tab", "clinics")
-            startActivity(i); finish()
-        }
-
-        btnGoHome.setOnClickListener {
-            val i = Intent(this, MainActivity::class.java)
-            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-            i.putExtra("open_tab", "home")
-            startActivity(i); finish()
+            finish()
         }
     }
 
-    // This function preserves the original behavior:
-    // - creates heatmap overlay and saves overlayUri to faceHeatmapUriStr
-    // - returns human-readable summary label
+    // ---------------------------------------------------------------------------------------------
+    // PROCESS SKIN + SHOW UI
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun processSkin(bmp: Bitmap) {
+        val summary = runSkinOnBitmap(bmp)
+
+        // Patch + label aggregation using MLUtils
+        val (patches, aggProbs) = MLUtils.analyzePatchesFromSelfieBlocking(
+            bmp, interpreter, labels, inputW, inputH, inputChannels,
+            inputDataType, inputScale, inputZeroPoint
+        )
+
+        patchResults.clear()
+        patches.forEach { p ->
+            patchResults.add(PatchResult(p.bmp, p.label, p.confidence))
+        }
+
+        val finalLabel = detectFinalSkinLabel()
+        lastFinalLabel = finalLabel
+
+        lastFinalProb =
+            if (labels.contains(finalLabel)) {
+                aggProbs[labels.indexOf(finalLabel)]
+            } else 0f
+
+        val disp = finalLabel.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+
+        val recKey = finalLabel.replace("\\s".toRegex(), "").lowercase()
+        val rec = RecommendationProvider.getSkinRecommendation(recKey)
+        lastRecommendations = rec?.tips ?: emptyList()
+
+        runOnUiThread {
+            tvSummaryText.text = disp
+            tvAccuracyLabel.text = "Accuracy Level: ${(lastFinalProb * 100).toInt()}%"
+            rvPatches.adapter?.notifyDataSetChanged()
+
+            tvRecSummary.text = rec?.summary ?: "Follow general skin care steps."
+            llTips.removeAllViews()
+            rec?.tips?.forEach { t ->
+                val tv = layoutInflater.inflate(android.R.layout.simple_list_item_1, llTips, false) as TextView
+                tv.text = "• $t"
+                tv.setTextColor(resources.getColor(R.color.black))
+                llTips.addView(tv)
+            }
+
+            // ⭐ PRODUCT FETCHING
+            fetchMatchingProducts(finalLabel)
+        }
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     private fun runSkinOnBitmap(fullBmp: Bitmap): String {
         // use MLUtils.detectFacesBlocking for face detection (same as original logic)
@@ -513,48 +461,6 @@ class SkinReportActivity : AppCompatActivity() {
         return summaryText
     }
 
-    // runModelGetOutputAsFloatArray is now provided by MLUtils - but keep a local wrapper if needed elsewhere.
-    // Label loading and model-loading helpers remain as before.
-
-    private fun loadLabels(fileName: String): List<String> {
-        return try {
-            val input = assets.open(fileName)
-            val br = BufferedReader(InputStreamReader(input))
-            val out = br.readLines().map { it.trim() }.filter { it.isNotEmpty() }
-            br.close(); out
-        } catch (e: Exception) { emptyList() }
-    }
-
-    inner class PatchAdapter(private val items: List<PatchResult>) : RecyclerView.Adapter<PatchAdapter.VH>() {
-        inner class VH(v: View) : RecyclerView.ViewHolder(v) {
-            val iv: ImageView = v.findViewById(R.id.ivPatch)
-            val tvLbl: TextView = v.findViewById(R.id.tvPatchLabel)
-            val card: MaterialCardView = v.findViewById(R.id.cardPatch)
-        }
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-            val v = LayoutInflater.from(parent.context).inflate(R.layout.item_patch, parent, false)
-            return VH(v)
-        }
-        @SuppressLint("MissingInflatedId")
-        override fun onBindViewHolder(holder: VH, position: Int) {
-            val ite = items[position]
-            holder.iv.setImageBitmap(ite.bmp)
-            holder.tvLbl.text = "${ite.label} (${String.format("%.1f", ite.confidence)}%)"
-            holder.card.setOnClickListener {
-                val d = android.app.Dialog(this@SkinReportActivity)
-                val vi = layoutInflater.inflate(R.layout.dialog_patch_full, null)
-                val ivf = vi.findViewById<ImageView>(R.id.ivFull)
-                val tv = vi.findViewById<TextView>(R.id.tvFullLabel)
-                if (ivf != null) ivf.setImageBitmap(ite.bmp)
-                if (tv != null) tv.text = holder.tvLbl.text
-                d.setContentView(vi)
-                d.window?.setBackgroundDrawableResource(android.R.color.transparent)
-                d.show()
-            }
-        }
-        override fun getItemCount(): Int = items.size
-    }
-
     @RequiresApi(Build.VERSION_CODES.O)
     private fun saveBitmapToCache(bmp: Bitmap, name: String): Uri? {
         return try {
@@ -563,6 +469,130 @@ class SkinReportActivity : AppCompatActivity() {
             Uri.fromFile(f)
         } catch (e: Exception) {
             e.printStackTrace(); null
+        }
+    }
+
+
+
+    // ---------------------------------------------------------------------------------------------
+    // ⭐ FIRESTORE PRODUCT FETCH — just like Eye Report
+    private fun fetchMatchingProducts(label: String) {
+
+        // Model label is already EXACT (acne, eczema, normal, rosacea)
+        val formatted = label.lowercase().trim()
+
+        db.collection("products")
+            .whereEqualTo("category", "skin")
+            .whereEqualTo("isActive", true)
+            .whereArrayContains("recommendedFor", formatted)
+//            .orderBy("avgRating", Query.Direction.DESCENDING)
+            .limit(2)
+            .get()
+            .addOnSuccessListener { snap ->
+
+                if (!snap.isEmpty) {
+                    // Found exact matches
+                    showProductsWithAdapter(snap.toObjects(Product::class.java))
+                    return@addOnSuccessListener
+                }
+
+                // Fallback → show any top skin products
+                db.collection("products")
+                    .whereEqualTo("category", "skin")
+                    .whereEqualTo("isActive", true)
+//                    .orderBy("avgRating", Query.Direction.DESCENDING)
+                    .limit(2)
+                    .get()
+                    .addOnSuccessListener { fallbackSnap ->
+                        showProductsWithAdapter(fallbackSnap.toObjects(Product::class.java))
+                    }
+            }
+            .addOnFailureListener {
+                it.printStackTrace()
+            }
+    }
+
+
+
+    // ⭐ SHOW PRODUCTS
+    private fun showProductsWithAdapter(list: List<Product>) {
+        if (list.isEmpty()) {
+            rvProducts.visibility = View.GONE
+            tvProductsTitle.visibility = View.GONE
+            btnSeeMoreProducts.visibility = View.GONE
+            return
+        }
+
+        tvProductsTitle.visibility = View.VISIBLE
+        rvProducts.visibility = View.VISIBLE
+        btnSeeMoreProducts.visibility = View.VISIBLE
+
+        rvProducts.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
+
+        val adapter = ProductAdapter(
+            ctx = this,
+            list = list
+        ) { product ->
+            ProductDetailBottomSheet.newInstance(product)
+                .show(supportFragmentManager, "product_dialog")
+        }
+
+        rvProducts.adapter = adapter
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    private fun detectFinalSkinLabel(): String {
+        return if (patchResults.isEmpty()) "unknown"
+        else patchResults.groupBy { it.label }
+            .maxByOrNull { it.value.size }?.key ?: "unknown"
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    private fun showLoader(): Dialog {
+        val dlg = Dialog(this)
+        dlg.setContentView(layoutInflater.inflate(R.layout.dialog_simple_loader, null))
+        dlg.setCancelable(false)
+        dlg.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dlg.show()
+        return dlg
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // (UNCHANGED) — Saves report to Firestore
+    private fun saveReport() {
+        val uid = auth.currentUser?.uid ?: return
+        btnSave.isEnabled = false
+        btnSave.text = "Saving..."
+
+        val summary = tvSummaryText.text.toString()
+        val topLabel = lastFinalLabel
+        val recsToSave = lastRecommendations
+
+        uploadImagesAndSaveReport(
+            uid,
+            previewUriStr,
+            faceHeatmapUriStr,
+            type = "skin",
+            summary = summary,
+            topLabel = topLabel,
+            confidence = lastFinalProb.toDouble(),
+            recommendations = recsToSave
+        ) { success ->
+            runOnUiThread {
+                btnSave.isEnabled = true
+                btnSave.text = "Save Report"
+                if (success) {
+                    Toast.makeText(this, "Report saved", Toast.LENGTH_SHORT).show()
+                    val i = Intent(this, MainActivity::class.java)
+                    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    i.putExtra("open_tab", "home")
+                    startActivity(i)
+                    finish()
+                } else {
+                    Toast.makeText(this, "Failed to save report", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
@@ -678,5 +708,56 @@ class SkinReportActivity : AppCompatActivity() {
                         .addOnFailureListener { ex -> ex.printStackTrace(); onComplete(false) }
                 }
             }
+    }
+
+
+
+    // ---------------------------------------------------------------------------------------------
+    private fun loadLabels(fileName: String): List<String> {
+        return try {
+            val br = BufferedReader(InputStreamReader(assets.open(fileName)))
+            br.readLines().map { it.trim() }.filter { it.isNotEmpty() }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // (UNCHANGED) Patch Adapter
+    inner class PatchAdapter(private val items: List<PatchResult>) :
+        RecyclerView.Adapter<PatchAdapter.VH>() {
+
+        inner class VH(v: View) : RecyclerView.ViewHolder(v) {
+            val iv: ImageView = v.findViewById(R.id.ivPatch)
+            val tvLbl: TextView = v.findViewById(R.id.tvPatchLabel)
+            val card: MaterialCardView = v.findViewById(R.id.cardPatch)
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
+            val v = LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_patch, parent, false)
+            return VH(v)
+        }
+
+        @SuppressLint("MissingInflatedId")
+        override fun onBindViewHolder(holder: VH, position: Int) {
+            val p = items[position]
+            holder.iv.setImageBitmap(p.bmp)
+            holder.tvLbl.text = "${p.label} (${String.format("%.1f", p.confidence)}%)"
+
+            holder.card.setOnClickListener {
+                val d = Dialog(this@SkinReportActivity)
+                val vv = layoutInflater.inflate(R.layout.dialog_patch_full, null)
+                val ivf = vv.findViewById<ImageView>(R.id.ivFull)
+                val tv = vv.findViewById<TextView>(R.id.tvFullLabel)
+                ivf.setImageBitmap(p.bmp)
+                tv.text = holder.tvLbl.text
+                d.setContentView(vv)
+                d.window?.setBackgroundDrawableResource(android.R.color.transparent)
+                d.show()
+            }
+        }
+
+        override fun getItemCount(): Int = items.size
     }
 }

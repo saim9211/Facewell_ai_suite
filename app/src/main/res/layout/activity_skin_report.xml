@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/reportRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
     <!-- Header -->
     <FrameLayout
@@ -63,7 +67,6 @@
                         android:layout_height="match_parent"
                         android:scaleType="centerCrop"/>
 
-                    <!-- heatmap will be drawn into this ImageView (bitmap with alpha) -->
                     <ImageView
                         android:id="@+id/ivHeatmap"
                         android:layout_width="match_parent"
@@ -90,7 +93,6 @@
                 android:textColor="@color/text_muted"
                 android:layout_marginTop="6dp"
                 android:textStyle="bold"/>
-
 
             <View android:layout_width="match_parent" android:layout_height="8dp"/>
 
@@ -132,6 +134,7 @@
                 app:cardCornerRadius="10dp"
                 app:strokeWidth="0dp"
                 app:cardElevation="2dp"
+                android:layout_marginBottom="8dp"
                 app:cardBackgroundColor="@color/input_fill">
 
                 <LinearLayout
@@ -164,9 +167,40 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <View android:layout_width="match_parent" android:layout_height="12dp"/>
+            <!-- ⭐ NEW PRODUCT SECTION -->
+            <TextView
+                android:id="@+id/tvProductsTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Recommended Products"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:textColor="@color/teal_bg"
+                android:layout_marginTop="16dp"
+                 />
 
-            <!-- Action buttons -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvProducts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:overScrollMode="never"
+                android:layout_marginTop="8dp"
+                android:visibility="gone" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSeeMoreProducts"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="See More Products"
+                android:textColor="@color/teal_bg"
+                android:backgroundTint="@android:color/white"
+                app:cornerRadius="12dp"
+                app:strokeColor="@color/teal_bg"
+                app:strokeWidth="2dp"
+                android:layout_marginTop="12dp"
+                />
+
+            <!-- Buttons -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -207,7 +241,6 @@
                 app:strokeWidth="2dp"
                 android:layout_marginBottom="16dp"/>
 
-            <!-- Disclaimer -->
             <TextView
                 android:id="@+id/tvDisclaimer"
                 android:layout_width="match_parent"
@@ -218,5 +251,6 @@
         </LinearLayout>
 
     </ScrollView>
+    </LinearLayout>
 
-</LinearLayout>
+</FrameLayout>

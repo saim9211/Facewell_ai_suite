@@ -19,6 +19,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import com.google.firebase.Timestamp
@@ -37,6 +38,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 import com.example.fyp.utils.ModelLoader
 import com.example.fyp.utils.MLUtils
+import retrofit2.http.Query
 
 class MoodReportActivity : AppCompatActivity() {
 
@@ -58,6 +60,9 @@ class MoodReportActivity : AppCompatActivity() {
     private lateinit var tvRecSummary: TextView
     private lateinit var tvProductsTitle: TextView
     private lateinit var rvProducts: RecyclerView
+    private lateinit var productAdapter: ProductAdapter
+    private val products = mutableListOf<Product>()
+
 
     private lateinit var interpreter: Interpreter
     private var inputH = 48
@@ -95,6 +100,21 @@ class MoodReportActivity : AppCompatActivity() {
         tvRecSummary = findViewById(R.id.tvRecSummary)
         tvProductsTitle = findViewById(R.id.tvProductsTitle)
         rvProducts = findViewById(R.id.rvProducts)
+
+        rvProducts.layoutManager =
+            LinearLayoutManager(this, RecyclerView.HORIZONTAL, false)
+
+        productAdapter = ProductAdapter(
+            ctx = this,
+            list = products
+        ) { product ->
+            ProductDetailBottomSheet
+                .newInstance(product)
+                .show(supportFragmentManager, "product_detail")
+        }
+
+        rvProducts.adapter = productAdapter
+
 
         tvReportTitle.text = "Mood Report"
         btnBack.setOnClickListener { finish() }
@@ -181,6 +201,10 @@ class MoodReportActivity : AppCompatActivity() {
                         tvProductsTitle.visibility = View.GONE
                         rvProducts.visibility = View.GONE
                     }
+
+                    // 🔥 ADD THIS EXACTLY HERE
+                    val key = topLabel.replace("\\s".toRegex(), "").lowercase()
+                    fetchMoodProducts(key)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -259,6 +283,49 @@ class MoodReportActivity : AppCompatActivity() {
             e.printStackTrace(); null
         }
     }
+
+    private fun fetchMoodProducts(moodKey: String) {
+
+        products.clear()
+        tvProductsTitle.visibility = View.GONE
+        rvProducts.visibility = View.GONE
+
+        db.collection("products")
+            .whereEqualTo("category", "mood")
+            .whereEqualTo("isActive", true)
+            .whereArrayContains("recommendedFor", moodKey)
+//            .orderBy("avgRating", Query.Direction.DESCENDING)
+            .limit(6)
+            .get()
+            .addOnSuccessListener { snap ->
+
+                for (doc in snap.documents) {
+                    try {
+                        val p = doc.toObject(Product::class.java)
+                        if (p != null) {
+                            products.add(p.copy(id = doc.id))
+                        }
+                    } catch (_: Exception) {}
+                }
+
+                if (products.isEmpty()) {
+                    tvProductsTitle.text = "No products for this mood"
+                    tvProductsTitle.visibility = View.VISIBLE
+                    rvProducts.visibility = View.GONE
+                } else {
+                    tvProductsTitle.text = "Recommended products"
+                    tvProductsTitle.visibility = View.VISIBLE
+                    rvProducts.visibility = View.VISIBLE
+                    productAdapter.update(products)
+                }
+            }
+            .addOnFailureListener {
+                tvProductsTitle.text = "No products for this mood"
+                tvProductsTitle.visibility = View.VISIBLE
+                rvProducts.visibility = View.GONE
+            }
+    }
+
 
     private fun uploadImagesAndSaveReport(
         uid: String,

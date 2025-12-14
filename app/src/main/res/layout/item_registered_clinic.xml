@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardElevation="3dp"
+    app:cardCornerRadius="16dp"
+    app:strokeWidth="0dp"
+    android:padding="14dp"
+    android:backgroundTint="@color/white">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp">
+
+        <!-- CLINIC NAME -->
+        <TextView
+            android:id="@+id/tvClinicName"
+            android:text="Clinic Name"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <!-- RATING -->
+        <TextView
+            android:id="@+id/tvRating"
+            android:text="⭐ 4.8 (120)"
+            android:layout_marginTop="4dp"
+            android:textColor="@color/black"
+            android:textSize="13sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <!-- ADDRESS -->
+        <TextView
+            android:id="@+id/tvAddress"
+            android:text="Montgomery Road, Sahiwal"
+            android:layout_marginTop="6dp"
+            android:textColor="@color/text_muted"
+            android:textSize="13sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <!-- PHONE ROW: Number + Call Icon -->
+        <LinearLayout
+            android:id="@+id/phoneRow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp">
+
+            <TextView
+                android:id="@+id/tvPhone"
+                android:text="0300-1234567"
+                android:textStyle="bold"
+                android:textColor="@color/teal_bg"
+                android:textSize="16sp"
+                android:padding="4dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <ImageView
+                android:id="@+id/ivCall"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="6dp"
+                android:src="@drawable/ic_phone"
+                app:tint="@color/teal_bg"
+                android:contentDescription="Call clinic" />
+        </LinearLayout>
+
+        <!-- WEBSITE -->
+        <TextView
+            android:id="@+id/tvWebsite"
+            android:text="www.clinic.com"
+            android:layout_marginTop="6dp"
+            android:textColor="@color/teal_mid"
+            android:textSize="13sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <!-- SERVICES -->
+        <TextView
+            android:id="@+id/tvServices"
+            android:text="Eye Checkup, Retina Specialist"
+            android:layout_marginTop="6dp"
+            android:textColor="@color/text_muted"
+            android:textSize="12sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <!-- MAP BUTTON -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnOpenMaps"
+            android:text="Open in Google Maps"
+            android:textAllCaps="false"
+            android:layout_marginTop="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            app:cornerRadius="16dp"
+            android:backgroundTint="@color/teal_bg"
+            android:textColor="@color/white"/>
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

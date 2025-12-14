@@ -20,6 +20,9 @@
     <color name="on_teal">#FFFFFF</color>
     <color name="card_shadow">#14000000</color>
     <color name="text_hint_dark">#808080</color>
+    <color name="star_filled">#FFC107</color>   <!-- Yellow -->
+    <color name="star_empty">#BDBDBD</color>    <!-- Light Gray -->
+
 
 
 </resources>

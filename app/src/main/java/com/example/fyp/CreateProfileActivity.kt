@@ -89,7 +89,7 @@ class CreateProfileActivity : AppCompatActivity() {
         setupInputFiltersAndWatchers()
         loadExistingIfAny()
 
-//        btnNext.setOnClickListener { onNext() }
+        btnNext.setOnClickListener { onNext() }
 //        findViewById<View>(R.id.btnBack).setOnClickListener { onBackPressedDispatcher.onBackPressed() }
     }
 
@@ -167,8 +167,13 @@ class CreateProfileActivity : AppCompatActivity() {
     private fun setupGenderDropdown() {
         val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, genderSelect)
         etGender.setAdapter(adapter)
-        etGender.setOnClickListener { etGender.showDropDown() }
+
+        etGender.keyListener = null       // user cannot type
+        etGender.setOnClickListener {
+            etGender.showDropDown()
+        }
     }
+
 
     private fun setupInputFiltersAndWatchers() {
         // Name input filter - allow letters and spaces only

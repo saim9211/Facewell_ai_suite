@@ -308,9 +308,12 @@
             android:background="@drawable/input_field_bg"
             android:paddingStart="12dp"
             android:hint="Gender"
-            android:inputType="textCapWords"
+            android:focusable="false"
+            android:clickable="true"
+            android:inputType="none"
             android:textColor="@color/black"
             android:textColorHint="@color/text_muted"/>
+
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Next -->

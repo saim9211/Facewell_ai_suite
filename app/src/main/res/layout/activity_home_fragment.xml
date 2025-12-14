@@ -18,7 +18,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingBottom="30dp">
 
             <!-- Header -->
             <FrameLayout
@@ -169,9 +170,9 @@
                         android:layout_alignParentStart="true"
                         android:layout_alignParentTop="true"
                         android:layout_alignParentBottom="true"
-                        android:layout_marginStart="16dp"
-                        android:layout_marginTop="16dp"
-                        android:layout_marginBottom="27dp"
+                        android:layout_marginStart="12dp"
+                        android:layout_marginTop="12dp"
+                        android:layout_marginBottom="12dp"
                         android:orientation="vertical">
 
                         <TextView
@@ -202,13 +203,14 @@
                 android:layout_height="wrap_content"
                 android:columnCount="2"
                 android:rowCount="2"
-                android:padding="9dp">
+                android:padding="9dp"
+                android:paddingBottom="0dp">
 
                 <!-- Skin -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/qaSkin"
                     android:layout_width="0dp"
-                    android:layout_height="120dp"
+                    android:layout_height="100dp"
                     android:layout_margin="8dp"
                     android:layout_columnWeight="1"
                     app:cardBackgroundColor="@android:color/white"
@@ -240,7 +242,7 @@
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/qaEye"
                     android:layout_width="0dp"
-                    android:layout_height="120dp"
+                    android:layout_height="100dp"
                     android:layout_margin="8dp"
                     android:layout_columnWeight="1"
                     app:cardBackgroundColor="@android:color/white"
@@ -272,7 +274,7 @@
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/qaStress"
                     android:layout_width="0dp"
-                    android:layout_height="120dp"
+                    android:layout_height="100dp"
                     android:layout_margin="8dp"
                     android:layout_columnWeight="1"
                     app:cardBackgroundColor="@android:color/white"
@@ -304,7 +306,7 @@
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/qaFullFace"
                     android:layout_width="0dp"
-                    android:layout_height="120dp"
+                    android:layout_height="100dp"
                     android:layout_margin="8dp"
                     android:layout_columnWeight="1"
                     app:cardBackgroundColor="@android:color/white"
@@ -333,6 +335,22 @@
                 </com.google.android.material.card.MaterialCardView>
 
             </GridLayout>
+
+            <!-- Search Products Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSearchProducts"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="0dp"
+                android:text="Search Products"
+                android:textAllCaps="false"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                app:cornerRadius="16dp"
+                app:backgroundTint="@color/teal_bg"/>
+
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

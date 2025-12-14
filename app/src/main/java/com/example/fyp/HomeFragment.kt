@@ -94,6 +94,7 @@ class HomeFragment : Fragment(R.layout.activity_home_fragment) {
         tvWeatherFeels = view.findViewById(R.id.tvWeatherFeels)
         tvWeatherPlace = view.findViewById(R.id.tvWeatherPlace)
 
+
         cardWeather?.visibility = View.VISIBLE
         showWeatherPlaceholder("Loading...")
 
@@ -118,6 +119,29 @@ class HomeFragment : Fragment(R.layout.activity_home_fragment) {
 //        view.findViewById<View>(R.id.qaFullFace).setOnClickListener {
 //            startActivity(Intent(requireContext(), FullFaceScanActivity::class.java))
 //        }
+
+        // --- Quick Scan Cards → Open Chooser Sheet ---
+        view.findViewById<View>(R.id.qaSkin).setOnClickListener {
+            ScanChooserSheet.show(requireActivity() as MainActivity)
+        }
+
+        view.findViewById<View>(R.id.qaEye).setOnClickListener {
+            ScanChooserSheet.show(requireActivity() as MainActivity)
+        }
+
+        view.findViewById<View>(R.id.qaStress).setOnClickListener {
+            ScanChooserSheet.show(requireActivity() as MainActivity)
+        }
+
+        view.findViewById<View>(R.id.qaFullFace).setOnClickListener {
+            ScanChooserSheet.show(requireActivity() as MainActivity)
+        }
+
+        view.findViewById<View>(R.id.btnSearchProducts).setOnClickListener {
+            startActivity(Intent(requireContext(), SearchProductsActivity::class.java))
+        }
+
+
 
         fetchUserOnce()
     }

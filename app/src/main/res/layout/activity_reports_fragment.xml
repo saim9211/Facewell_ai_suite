@@ -72,54 +72,62 @@
             app:strokeWidth="0dp"/>
     </LinearLayout>
 
-    <!-- Content -->
-    <FrameLayout
+    <!-- Swipe-to-refresh wrapper -->
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="72dp">
 
-        <!-- placeholder when empty -->
-        <LinearLayout
-            android:id="@+id/emptyPlaceholder"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:visibility="gone">
+            android:layout_height="match_parent">
 
-            <ImageView
-                android:layout_width="96dp"
-                android:layout_height="96dp"
-                android:src="@drawable/ic_report_placeholder"
-                app:tint="@color/text_muted"/>
+            <!-- placeholder -->
+            <LinearLayout
+                android:id="@+id/emptyPlaceholder"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="gone">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="No reports yet"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_muted"
-                android:layout_marginTop="12dp"/>
+                <ImageView
+                    android:layout_width="96dp"
+                    android:layout_height="96dp"
+                    android:src="@drawable/ic_report_placeholder"
+                    app:tint="@color/text_muted"/>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Take a scan to generate your first report."
-                android:textSize="13sp"
-                android:textColor="@color/text_muted"
-                android:layout_marginTop="6dp"/>
-        </LinearLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="No reports yet"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_muted"
+                    android:layout_marginTop="12dp"/>
 
-        <!-- reports list -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvReports"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:layout_marginBottom="30dp"
-            android:padding="12dp"
-            android:visibility="gone"/>
-    </FrameLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Take a scan to generate your first report."
+                    android:textSize="13sp"
+                    android:textColor="@color/text_muted"
+                    android:layout_marginTop="6dp"/>
+            </LinearLayout>
+
+            <!-- reports list -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvReports"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:layout_marginBottom="30dp"
+                android:padding="12dp"
+                android:visibility="gone"/>
+        </FrameLayout>
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

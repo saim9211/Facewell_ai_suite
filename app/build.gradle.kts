@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.fyp"
-    compileSdk = 34
+    compileSdk = 35   // ✅ FIXED
 
     defaultConfig {
         applicationId = "com.example.fyp"
@@ -14,7 +14,6 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -27,46 +26,41 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+
     kotlinOptions {
         jvmTarget = "1.8"
     }
 }
 
 dependencies {
-    // AndroidX / Material
+
+    // AndroidX
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
-    implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.swiperefreshlayout)
-    implementation(libs.firebase.appcheck.debug)
 
-    // ===== REMOVED: LiteRT (was causing duplicate TFLite classes) =====
-    // implementation(libs.litert.support.api)
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    // Material (keep ONE)
+    implementation("com.google.android.material:material:1.12.0")
 
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
-    implementation("com.google.android.material:material:1.12.0")
-
     implementation("com.google.firebase:firebase-analytics-ktx")
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
     implementation("com.google.firebase:firebase-messaging-ktx")
+    implementation(libs.firebase.appcheck.debug)
 
     // Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-
     implementation("com.google.code.gson:gson:2.8.9")
 
     // Location
@@ -85,9 +79,14 @@ dependencies {
     // ML Kit
     implementation("com.google.mlkit:face-detection:16.1.7")
 
-    // ===== TensorFlow Lite (KEEP this one) =====
+    // TensorFlow Lite
     implementation("org.tensorflow:tensorflow-lite:2.14.0")
 
     // Glide
     implementation("com.github.bumptech.glide:glide:4.16.0")
+
+    // Tests
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }

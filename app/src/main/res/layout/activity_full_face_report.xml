@@ -290,6 +290,33 @@
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
+                <!-- ================= EYE PRODUCTS ================= -->
+                <TextView
+                    android:id="@+id/tvEyeProductsTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Recommended Products for you"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"
+                    android:layout_marginTop="12dp"
+                    />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvProducts"
+                    android:layout_width="match_parent"
+                    android:layout_height="170dp"
+                    android:scrollbars="horizontal"/>
+
+                <Button
+                    android:id="@+id/btnSeeMoreProducts"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="See More Products"
+                    android:layout_marginTop="10dp"
+                    android:textColor="@color/white"
+                    android:backgroundTint="@color/teal_bg" />
+
+
                 <!-- ACTIONS -->
                 <View android:layout_width="match_parent" android:layout_height="16dp"/>
 
