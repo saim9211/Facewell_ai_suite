@@ -30,6 +30,9 @@
         android:theme="@style/Theme.FYP"
         tools:targetApi="31">
         <activity
+            android:name=".WaitingApprovalActivity"
+            android:exported="false" />
+        <activity
             android:name=".ProductDetailBottomSheet"
             android:exported="false" />
         <activity
@@ -136,7 +139,6 @@
         <activity
             android:name=".ScanSkinActivity"
             android:exported="false" />
-
         <activity
             android:name=".CreateProfileActivity"
             android:exported="false" />

@@ -34,6 +34,9 @@ data class UserProfile(
     // ⭐ PRODUCT RATING SYSTEM
     val ratedProducts: List<String> = emptyList(),
 
+    val isApproved: Boolean? = null,
+
+
     // -----------------------------
     // ⭐ VENDOR ANALYTICS FIELDS
     // -----------------------------

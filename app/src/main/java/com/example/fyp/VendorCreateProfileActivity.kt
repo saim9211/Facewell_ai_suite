@@ -244,6 +244,7 @@ class VendorCreateProfileActivity : AppCompatActivity() {
             "city" to city,
             "vendorAddress" to address,
             "stage" to 2,
+            "isApproved" to false,
             "locationEnabled" to false,
             "profileUpdatedAt" to System.currentTimeMillis()
         )
@@ -254,7 +255,7 @@ class VendorCreateProfileActivity : AppCompatActivity() {
             .set(payload, SetOptions.merge())
             .addOnSuccessListener {
                 Toast.makeText(this, "Vendor profile saved.", Toast.LENGTH_SHORT).show()
-                val i = Intent(this, VendorMainActivity::class.java).apply {
+                val i = Intent(this, WaitingApprovalActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 }
                 startActivity(i)

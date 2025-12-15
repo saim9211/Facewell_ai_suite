@@ -91,11 +91,9 @@ class SplashActivity : AppCompatActivity() {
      * ✅ EXACT ROUTING LOGIC YOU PROVIDED
      */
     private fun goNextByStage() {
-        val uid = auth.currentUser?.uid
-        if (uid == null) {
+        val uid = auth.currentUser?.uid ?: run {
             authCheckDone = true
             routingIntent = Intent(this, LoginActivity::class.java)
-            if (splashDone && !routed) startAndFinish(routingIntent!!)
             return
         }
 
@@ -103,55 +101,54 @@ class SplashActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { doc ->
                 if (!doc.exists()) {
-                    Toast.makeText(this, "Profile not found.", Toast.LENGTH_LONG).show()
                     routingIntent = Intent(this, LoginActivity::class.java)
                     authCheckDone = true
-                    if (splashDone && !routed) startAndFinish(routingIntent!!)
                     return@addOnSuccessListener
                 }
 
                 val stage = (doc.getLong("stage") ?: 0L).toInt()
                 val userType = doc.getString("userType") ?: ""
+                val isApproved = doc.getBoolean("isApproved") ?: false
 
                 routingIntent = when {
-                    // Stage 0 → select account type
-                    stage <= 0 -> Intent(this, SelectUserTypeActivity::class.java)
+                    stage <= 0 ->
+                        Intent(this, SelectUserTypeActivity::class.java)
 
-                    // Stage 1 → profile creation
-                    stage == 1 -> {
-                        when (userType) {
-                            "user" -> Intent(this, CreateProfileActivity::class.java)
-                            "vendor" -> Intent(this, VendorCreateProfileActivity::class.java)
-                            "clinic" -> Intent(this, ClinicCreateProfileActivity::class.java)
-                            else -> Intent(this, SelectUserTypeActivity::class.java)
-                        }
+                    stage == 1 -> when (userType) {
+                        "user" -> Intent(this, CreateProfileActivity::class.java)
+                        "vendor" -> Intent(this, VendorCreateProfileActivity::class.java)
+                        "clinic" -> Intent(this, ClinicCreateProfileActivity::class.java)
+                        else -> Intent(this, SelectUserTypeActivity::class.java)
                     }
 
-                    // Stage 2 → main flows
-                    stage == 2 -> {
-                        when (userType) {
-                            "user" -> Intent(this, MainActivity::class.java)
-                            "vendor" -> Intent(this, VendorMainActivity::class.java)
-                            "clinic" -> Intent(this, ClinicMainActivity::class.java)
-                            else -> Intent(this, MainActivity::class.java)
-                        }
+                    stage == 2 -> when (userType) {
+                        "user" ->
+                            Intent(this, MainActivity::class.java)
+
+                        "vendor", "clinic" ->
+                            if (!isApproved)
+                                Intent(this, WaitingApprovalActivity::class.java)
+                            else
+                                if (userType == "vendor")
+                                    Intent(this, VendorMainActivity::class.java)
+                                else
+                                    Intent(this, ClinicMainActivity::class.java)
+
+                        else -> Intent(this, MainActivity::class.java)
                     }
 
                     else -> Intent(this, SelectUserTypeActivity::class.java)
                 }
 
                 authCheckDone = true
-                if (splashDone && !routed) {
-                    startAndFinish(routingIntent!!)
-                }
-            }
-            .addOnFailureListener {
-                Toast.makeText(this, "Could not load profile. Try again.", Toast.LENGTH_LONG).show()
-                routingIntent = Intent(this, LoginActivity::class.java)
-                authCheckDone = true
                 if (splashDone && !routed) startAndFinish(routingIntent!!)
             }
+            .addOnFailureListener {
+                routingIntent = Intent(this, LoginActivity::class.java)
+                authCheckDone = true
+            }
     }
+
 
     /**
      * Safety fallback

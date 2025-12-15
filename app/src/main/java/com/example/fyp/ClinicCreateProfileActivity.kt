@@ -279,6 +279,7 @@ class ClinicCreateProfileActivity : AppCompatActivity() {
             "city" to city,
             "clinicAddress" to address,
             "stage" to 2,
+            "isApproved" to false,
             "locationEnabled" to false
         )
 
@@ -290,7 +291,7 @@ class ClinicCreateProfileActivity : AppCompatActivity() {
             .set(payload, SetOptions.merge())
             .addOnSuccessListener {
                 Toast.makeText(this, "Clinic profile saved.", Toast.LENGTH_SHORT).show()
-                val i = Intent(this, ClinicMainActivity::class.java).apply {
+                val i = Intent(this, WaitingApprovalActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 }
                 startActivity(i)

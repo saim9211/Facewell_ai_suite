@@ -228,8 +228,7 @@ class LoginActivity : AppCompatActivity() {
 
     // --- Stage-based routing (updated) ---
     private fun goNextByStage() {
-        val uid = auth.currentUser?.uid
-        if (uid == null) {
+        val uid = auth.currentUser?.uid ?: run {
             showLoading(false)
             return
         }
@@ -244,32 +243,36 @@ class LoginActivity : AppCompatActivity() {
                 }
 
                 val stage = (doc.getLong("stage") ?: 0L).toInt()
-                val userType = doc.getString("userType") ?: ""   // "", "user", "vendor", "clinic"
+                val userType = doc.getString("userType") ?: ""
+                val isApproved = doc.getBoolean("isApproved") ?: false
 
                 val nextIntent = when {
-                    // Stage 0 => select account type (signup default stage=0)
-                    stage <= 0 -> Intent(this, SelectUserTypeActivity::class.java)
+                    stage <= 0 ->
+                        Intent(this, SelectUserTypeActivity::class.java)
 
-                    // Stage 1 => profile creation step for the chosen userType
-                    stage == 1 -> {
-                        when (userType) {
-                            "user" -> Intent(this, CreateProfileActivity::class.java)
-                            "vendor" -> Intent(this, VendorCreateProfileActivity::class.java)
-                            "clinic" -> Intent(this, ClinicCreateProfileActivity::class.java)
-                            else -> Intent(this, SelectUserTypeActivity::class.java)
-                        }
+                    stage == 1 -> when (userType) {
+                        "user" -> Intent(this, CreateProfileActivity::class.java)
+                        "vendor" -> Intent(this, VendorCreateProfileActivity::class.java)
+                        "clinic" -> Intent(this, ClinicCreateProfileActivity::class.java)
+                        else -> Intent(this, SelectUserTypeActivity::class.java)
                     }
 
-                    stage == 2 -> {
-                        when (userType) {
-                            "user" -> Intent(this, MainActivity::class.java)
-                            "vendor" -> Intent(this, VendorMainActivity::class.java)
-                            "clinic" -> Intent(this, ClinicMainActivity::class.java)
-                            else -> Intent(this, MainActivity::class.java)
-                        }
+                    stage == 2 -> when (userType) {
+                        "user" ->
+                            Intent(this, MainActivity::class.java)
+
+                        "vendor", "clinic" ->
+                            if (!isApproved)
+                                Intent(this, WaitingApprovalActivity::class.java)
+                            else
+                                if (userType == "vendor")
+                                    Intent(this, VendorMainActivity::class.java)
+                                else
+                                    Intent(this, ClinicMainActivity::class.java)
+
+                        else -> Intent(this, MainActivity::class.java)
                     }
 
-                    // fallback
                     else -> Intent(this, SelectUserTypeActivity::class.java)
                 }
 
@@ -279,9 +282,10 @@ class LoginActivity : AppCompatActivity() {
             }
             .addOnFailureListener {
                 showLoading(false)
-                Toast.makeText(this, "Could not load profile. Try again.", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Could not load profile.", Toast.LENGTH_LONG).show()
             }
     }
+
 
     // --- Helpers ---
     private fun setupLiveValidation() {
