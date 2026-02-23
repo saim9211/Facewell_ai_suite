@@ -14,18 +14,18 @@
         <!-- Header -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:background="@android:color/white"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp">
+            android:layout_height="80dp"
+            android:background="@drawable/bg_home_header_round"
+            android:paddingHorizontal="16dp">
 
             <ImageButton
                 android:id="@+id/btnBack"
-                android:layout_width="36dp"
-                android:layout_height="match_parent"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="start|center_vertical"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/back_arrow"
-                app:tint="@color/black" />
+                app:tint="@color/white" />
 
             <TextView
                 android:id="@+id/tvReportTitle"
@@ -34,8 +34,8 @@
                 android:layout_gravity="center"
                 android:text="Eye Report"
                 android:textStyle="bold"
-                android:textColor="@color/teal_bg"
-                android:textSize="18sp" />
+                android:textColor="@color/white"
+                android:textSize="20sp" />
         </FrameLayout>
 
         <!-- Scroll Content -->
@@ -54,9 +54,12 @@
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="360dp"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="2dp"
-                    android:layout_marginBottom="12dp">
+                    app:cardCornerRadius="24dp"
+                    app:cardElevation="4dp"
+                    app:strokeWidth="0dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="20dp"
+                    android:layout_marginHorizontal="2dp">
 
                     <ImageView
                         android:id="@+id/ivPreview"
@@ -65,32 +68,53 @@
                         android:scaleType="centerCrop" />
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Summary -->
-                <TextView
-                    android:id="@+id/tvSummary"
+                <!-- Result Header Section -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Summary"
-                    android:textSize="16sp"
-                    android:textColor="@color/black"
-                    android:textStyle="bold" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+                    
+                    <View
+                        android:layout_width="4dp"
+                        android:layout_height="24dp"
+                        android:background="@color/teal_bg" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="8dp">
+
+                        <TextView
+                            android:id="@+id/tvSummary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Analysis Summary"
+                            android:textSize="14sp"
+                            android:textColor="@color/text_muted"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvOverallResult"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="OVERALL RESULT"
+                            android:textColor="@color/teal_bg"
+                            android:textStyle="bold"
+                            android:textSize="18sp" />
+                    </LinearLayout>
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/tvSummaryText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/text_muted"
-                    android:layout_marginTop="6dp" />
-
-                <TextView
-                    android:id="@+id/tvOverallResult"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="OVERALL RESULT"
-                    android:textColor="@color/teal_bg"
-                    android:textStyle="bold"
-                    android:textSize="18sp"
-                    android:layout_marginTop="10dp" />
+                    android:textColor="@color/black"
+                    android:textSize="14sp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginStart="12dp" />
 
                 <View
                     android:layout_width="match_parent"
@@ -101,24 +125,27 @@
                     android:id="@+id/container_eye"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:layout_marginTop="16dp">
 
                     <LinearLayout
                         android:id="@+id/rowFindings"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:weightSum="2">
+                        android:weightSum="10">
 
                         <!-- Left Eye -->
                         <com.google.android.material.card.MaterialCardView
                             android:id="@+id/cardLeft"
                             android:layout_width="0dp"
-                            android:layout_height="120dp"
-                            android:layout_weight="1"
-                            app:cardCornerRadius="8dp"
-                            app:cardElevation="1dp"
-                            android:layout_marginEnd="8dp">
+                            android:layout_height="140dp"
+                            android:layout_weight="5"
+                            app:cardCornerRadius="16dp"
+                            app:cardElevation="2dp"
+                            app:strokeWidth="1dp"
+                            app:strokeColor="#F0F0F0"
+                            android:layout_marginEnd="6dp">
 
                             <LinearLayout
                                 android:layout_width="match_parent"
@@ -137,9 +164,11 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:gravity="center"
-                                    android:padding="6dp"
-                                    android:textSize="14sp"
-                                    android:textColor="@color/text_muted" />
+                                    android:padding="8dp"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/black"
+                                    android:background="@color/white" />
                             </LinearLayout>
                         </com.google.android.material.card.MaterialCardView>
 
@@ -147,11 +176,13 @@
                         <com.google.android.material.card.MaterialCardView
                             android:id="@+id/cardRight"
                             android:layout_width="0dp"
-                            android:layout_height="120dp"
-                            android:layout_weight="1"
-                            app:cardCornerRadius="8dp"
-                            app:cardElevation="1dp"
-                            android:layout_marginStart="8dp">
+                            android:layout_height="140dp"
+                            android:layout_weight="5"
+                            app:cardCornerRadius="16dp"
+                            app:cardElevation="2dp"
+                            app:strokeWidth="1dp"
+                            app:strokeColor="#F0F0F0"
+                            android:layout_marginStart="6dp">
 
                             <LinearLayout
                                 android:layout_width="match_parent"
@@ -170,9 +201,11 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:gravity="center"
-                                    android:padding="6dp"
-                                    android:textSize="14sp"
-                                    android:textColor="@color/text_muted" />
+                                    android:padding="8dp"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/black"
+                                    android:background="@color/white" />
                             </LinearLayout>
                         </com.google.android.material.card.MaterialCardView>
                     </LinearLayout>
@@ -198,18 +231,20 @@
                         android:id="@+id/cardRecommendations"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        app:cardCornerRadius="10dp"
-                        app:strokeWidth="0dp"
-                        app:cardElevation="1dp"
-                        android:background="#F2F2F2">
+                        android:layout_marginTop="12dp"
+                        app:cardCornerRadius="20dp"
+                        app:strokeWidth="1dp"
+                        app:strokeColor="#F0F0F0"
+                        app:cardElevation="2dp"
+                        android:layout_marginBottom="12dp"
+                        app:cardBackgroundColor="@color/input_fill"
+                        android:layout_marginHorizontal="2dp">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:background="@color/teal_light"
-                            android:padding="12dp">
+                            android:padding="16dp">
 
                             <TextView
                                 android:id="@+id/tvRecTitle"
@@ -217,21 +252,23 @@
                                 android:layout_height="wrap_content"
                                 android:text="Recommended organic care"
                                 android:textStyle="bold"
-                                android:textColor="@color/black" />
+                                android:textSize="16sp"
+                                android:textColor="@color/teal_bg" />
 
                             <TextView
                                 android:id="@+id/tvRecSummary"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:textColor="@color/black"
-                                android:layout_marginTop="6dp" />
+                                android:textColor="@color/text_muted"
+                                android:textSize="14sp"
+                                android:layout_marginTop="8dp" />
 
                             <LinearLayout
                                 android:id="@+id/llTips"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="vertical"
-                                android:layout_marginTop="8dp" />
+                                android:layout_marginTop="12dp" />
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
 
@@ -239,9 +276,10 @@
                         android:id="@+id/tvProductsTitle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Products for you"
+                        android:text="Recommended Products"
                         android:textStyle="bold"
-                        android:layout_marginTop="12dp"
+                        android:textSize="18sp"
+                        android:layout_marginTop="16dp"
                         android:textColor="@color/black" />
 
                     <!-- FINAL PRODUCT LIST (VERTICAL) -->
@@ -249,19 +287,25 @@
                         android:id="@+id/rvProducts"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:nestedScrollingEnabled="false" />
+                        android:layout_marginTop="12dp"
+                        android:nestedScrollingEnabled="false"
+                        android:visibility="gone" />
 
-                    <Button
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnSeeMoreProducts"
                         android:layout_width="match_parent"
-                        android:layout_height="48dp"
+                        android:layout_height="54dp"
                         android:text="See More Products"
-                        android:layout_marginTop="10dp"
-                        android:textColor="@color/white"
-                        android:backgroundTint="@color/teal_bg" />
+                        android:textColor="@color/teal_bg"
+                        android:backgroundTint="@android:color/white"
+                        app:cornerRadius="16dp"
+                        app:strokeColor="@color/teal_bg"
+                        app:strokeWidth="2dp"
+                        android:layout_marginTop="12dp"
+                        android:layout_marginBottom="16dp"
+                        android:textStyle="bold" />
 
-                    <!-- Save / Visit -->
+                    <!-- Action Buttons Row -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -272,35 +316,38 @@
                             android:id="@+id/btnSaveReport"
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:layout_height="48dp"
+                            android:layout_height="54dp"
                             android:text="Save Report"
                             android:textColor="@android:color/white"
                             app:backgroundTint="@color/teal_bg"
-                            app:cornerRadius="12dp" />
+                            app:cornerRadius="16dp"
+                            android:textStyle="bold" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnVisitClinic"
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:layout_height="48dp"
-                            android:layout_marginStart="8dp"
+                            android:layout_height="54dp"
+                            android:layout_marginStart="12dp"
                             android:text="Visit Clinic"
                             android:textColor="@android:color/white"
                             app:backgroundTint="@color/teal_bg"
-                            app:cornerRadius="12dp" />
+                            app:cornerRadius="16dp"
+                            android:textStyle="bold" />
                     </LinearLayout>
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnGoHome"
                         android:layout_width="match_parent"
-                        android:layout_height="48dp"
+                        android:layout_height="54dp"
                         android:text="Go Home"
                         android:textColor="@color/teal_bg"
                         android:backgroundTint="@android:color/white"
-                        app:cornerRadius="12dp"
+                        app:cornerRadius="16dp"
                         app:strokeColor="@color/teal_bg"
                         app:strokeWidth="2dp"
-                        android:layout_marginBottom="16dp" />
+                        android:layout_marginBottom="24dp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tvDisclaimer"

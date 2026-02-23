@@ -11,6 +11,7 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import com.bumptech.glide.Glide
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
@@ -46,6 +47,7 @@ class HomeFragment : Fragment(R.layout.activity_home_fragment) {
     private var tvWeatherHumidity: TextView? = null
     private var tvWeatherFeels: TextView? = null
     private var tvWeatherPlace: TextView? = null
+    private var ivUserProfile: ImageView? = null
 
     private var currentUserUid: String? = null
 
@@ -93,6 +95,7 @@ class HomeFragment : Fragment(R.layout.activity_home_fragment) {
         tvWeatherHumidity = view.findViewById(R.id.tvWeatherHumidity)
         tvWeatherFeels = view.findViewById(R.id.tvWeatherFeels)
         tvWeatherPlace = view.findViewById(R.id.tvWeatherPlace)
+        ivUserProfile = view.findViewById(R.id.ivUserProfile)
 
 
         cardWeather?.visibility = View.VISIBLE
@@ -161,33 +164,57 @@ class HomeFragment : Fragment(R.layout.activity_home_fragment) {
                 val firstName = snap.getString("firstName") ?: ""
                 setGreeting(firstName)
 
-                val locObj = snap.get("location")
-                if (locObj == null) {
-                    Log.d(TAG, "no location in user doc")
-                    ensureLocationSavedForUser()
-                    done?.invoke()
+                // Load User Profile Avatar (handles both URL and predefined avatar name)
+                val avatarName = snap.getString("avatar")
+                val profileUrl = snap.getString("profileImage")
+
+                if (ivUserProfile != null) {
+                    if (!profileUrl.isNullOrEmpty()) {
+                        Glide.with(this)
+                            .load(profileUrl)
+                            .placeholder(R.drawable.ic_profile)
+                            .error(R.drawable.ic_profile)
+                            .circleCrop()
+                            .into(ivUserProfile!!)
+                    } else if (!avatarName.isNullOrEmpty()) {
+                        val avatarRes = when (avatarName) {
+                            "avatar1" -> R.drawable.avatar1
+                            "avatar2" -> R.drawable.avatar2
+                            "avatar3" -> R.drawable.avatar3
+                            "avatar4" -> R.drawable.avatar4
+                            else -> R.drawable.ic_profile
+                        }
+                        ivUserProfile!!.setImageResource(avatarRes)
+                        if (avatarRes == R.drawable.ic_profile) {
+                            ivUserProfile!!.setColorFilter(resources.getColor(R.color.white, null))
+                        } else {
+                            ivUserProfile!!.clearColorFilter()
+                        }
+                    }
+                }
+
+                val isLocationEnabled = snap.getBoolean("locationEnabled") ?: false
+                if (isLocationEnabled && LocationHelper.hasLocationPermission(requireContext())) {
+                    Log.d(TAG, "locationEnabled and permission granted -> fetching real-time")
+                    fetchAndSaveLocationThenLoadWeather()
                 } else {
+                    // fall back to saved coordinates if any
+                    val locObj = snap.get("location")
                     val map = locObj as? Map<*, *>
-                    val lat = when (val v = map?.get("lat")) {
-                        is Number -> v.toDouble()
-                        is String -> v.toDoubleOrNull()
-                        else -> null
-                    }
-                    val lng = when (val v = map?.get("lng")) {
-                        is Number -> v.toDouble()
-                        is String -> v.toDoubleOrNull()
-                        else -> null
-                    }
+                    val lat = (map?.get("lat") as? Number)?.toDouble()
+                    val lng = (map?.get("lng") as? Number)?.toDouble()
 
                     if (lat != null && lng != null) {
                         Log.d(TAG, "found saved location: $lat, $lng")
                         loadWeatherUsingCoords(lat, lng)
-                    } else {
-                        Log.d(TAG, "Location malformed-> requesting fresh")
+                    } else if (isLocationEnabled) {
+                        Log.d(TAG, "locationEnabled but no coords or permission -> asking")
                         ensureLocationSavedForUser()
+                    } else {
+                        showWeatherPlaceholder("Location disabled")
                     }
-                    done?.invoke()
                 }
+                done?.invoke()
             }
             .addOnFailureListener { e ->
                 Log.e(TAG, "User fetching failed", e)
@@ -200,27 +227,26 @@ class HomeFragment : Fragment(R.layout.activity_home_fragment) {
     override fun onResume() {
         super.onResume()
         if (currentUserUid != null) {
+            // On resume, check if we should refresh location (real-time check)
             db.collection("users").document(currentUserUid!!).get()
                 .addOnSuccessListener { snap ->
-                    val locObj = snap.get("location")
-                    if (locObj == null) {
-                        ensureLocationSavedForUser()
+                    val isLocationEnabled = snap.getBoolean("locationEnabled") ?: false
+                    if (isLocationEnabled && LocationHelper.hasLocationPermission(requireContext())) {
+                        Log.d(TAG, "onResume: fetching fresh location")
+                        fetchAndSaveLocationThenLoadWeather()
                     } else {
+                        // fallback to saved
+                        val locObj = snap.get("location")
                         val map = locObj as? Map<*, *>
-                        val lat = when (val v = map?.get("lat")) {
-                            is Number -> v.toDouble()
-                            is String -> v.toDoubleOrNull()
-                            else -> null
-                        }
-                        val lng = when (val v = map?.get("lng")) {
-                            is Number -> v.toDouble()
-                            is String -> v.toDoubleOrNull()
-                            else -> null
-                        }
+                        val lat = (map?.get("lat") as? Number)?.toDouble()
+                        val lng = (map?.get("lng") as? Number)?.toDouble()
+
                         if (lat != null && lng != null) {
                             loadWeatherUsingCoords(lat, lng)
-                        } else {
+                        } else if (isLocationEnabled) {
                             ensureLocationSavedForUser()
+                        } else {
+                            showWeatherPlaceholder("Location disabled")
                         }
                     }
                 }

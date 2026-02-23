@@ -279,8 +279,8 @@ class ClinicCreateProfileActivity : AppCompatActivity() {
             "city" to city,
             "clinicAddress" to address,
             "stage" to 2,
-            "isApproved" to false,
-            "locationEnabled" to false
+            "locationEnabled" to false,
+            "isApproved" to false
         )
 
         if (website.isNotEmpty()) {

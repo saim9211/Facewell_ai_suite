@@ -25,98 +25,134 @@
             <FrameLayout
                 android:id="@+id/header"
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
+                android:layout_height="220dp"
                 android:background="@drawable/bg_home_header_round"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:paddingTop="28dp">
+                android:paddingStart="24dp"
+                android:paddingEnd="24dp"
+                android:paddingTop="48dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="30dp"
-                    android:orientation="vertical">
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
-                    <TextView
-                        android:id="@+id/tvGreeting"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Hello, User"
-                        android:textColor="@color/on_teal"
-                        android:textSize="30sp"
-                        android:textStyle="bold" />
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tvQuestion"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:text="How’s your face condition?"
-                        android:textColor="@color/on_teal"
-                        android:textSize="20sp" />
+                        <TextView
+                            android:id="@+id/tvGreeting"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Hello, User"
+                            android:textColor="@color/white"
+                            android:textSize="28sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvQuestion"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="How’s your face condition?"
+                            android:textColor="#E0FFFFFF"
+                            android:textSize="16sp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        app:cardCornerRadius="24dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="1.5dp"
+                        app:strokeColor="#4DFFFFFF"
+                        app:cardBackgroundColor="@android:color/transparent">
+                        
+                        <ImageView
+                            android:id="@+id/ivUserProfile"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:src="@drawable/ic_profile"
+                            android:scaleType="centerCrop"/>
+                    </com.google.android.material.card.MaterialCardView>
+
                 </LinearLayout>
             </FrameLayout>
 
-            <!-- WEATHER CARD: now VISIBLE by default (shows placeholders until data arrives) -->
+            <!-- WEATHER CARD -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardWeather"
                 android:layout_width="match_parent"
-                android:layout_height="82dp"
+                android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp"
-                android:layout_marginTop="16dp"
-                app:cardCornerRadius="12dp"
-                app:strokeWidth="0dp"
-                app:cardElevation="4dp"
-                app:cardBackgroundColor="@color/teal_light"
+                android:layout_marginTop="-40dp"
+                app:cardCornerRadius="20dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="#F0F0F0"
+                app:cardElevation="6dp"
+                app:cardBackgroundColor="@color/white"
                 android:visibility="visible">
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="10dp"
+                    android:padding="16dp"
                     android:gravity="center_vertical">
 
-                    <ImageView
-                        android:id="@+id/ivWeatherIcon"
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:src="@drawable/ic_weather_placeholder"
-                        android:contentDescription="weather icon"
-                        android:layout_marginEnd="12dp" />
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        app:cardCornerRadius="14dp"
+                        app:cardElevation="0dp"
+                        app:cardBackgroundColor="@color/teal_light">
+                        
+                        <ImageView
+                            android:id="@+id/ivWeatherIcon"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:padding="10dp"
+                            android:src="@drawable/ic_weather_placeholder"
+                            android:contentDescription="weather icon" />
+                    </com.google.android.material.card.MaterialCardView>
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_weight="1"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:layout_marginStart="16dp">
 
                         <TextView
                             android:id="@+id/tvWeatherTemp"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="--°C"
-                            android:textSize="18sp"
+                            android:textSize="22sp"
                             android:textStyle="bold"
-                            android:textColor="@color/teal_bg"/>
+                            android:textColor="@color/black"/>
 
                         <TextView
                             android:id="@+id/tvWeatherMain"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Weather unavailable"
-                            android:textSize="12sp"
+                            android:textSize="13sp"
                             android:textColor="@color/text_muted"/>
-                        <!-- add this under tvWeatherMain -->
+
                         <TextView
                             android:id="@+id/tvWeatherPlace"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Unknown Location"
-                            android:textSize="11sp"
-                            android:textColor="@color/text_muted"
-                            android:layout_marginTop="2dp"/>
+                            android:textSize="12sp"
+                            android:textColor="@color/teal_bg"
+                            android:layout_marginTop="2dp"
+                            android:textStyle="bold"/>
 
                     </LinearLayout>
 
@@ -131,7 +167,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Humidity: --"
-                            android:textSize="12sp"
+                            android:textSize="11sp"
                             android:textColor="@color/text_muted"/>
 
                         <TextView
@@ -139,8 +175,9 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Feels: --°C"
-                            android:textSize="12sp"
-                            android:textColor="@color/text_muted"/>
+                            android:textSize="11sp"
+                            android:textColor="@color/text_muted"
+                            android:layout_marginTop="2dp"/>
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -150,29 +187,25 @@
                 android:id="@+id/cardPromo"
                 android:layout_width="match_parent"
                 android:layout_height="120dp"
-               android:layout_marginHorizontal="16dp"
+                android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="16dp"
-                android:layout_marginBottom="0dp"
+                android:layout_marginBottom="8dp"
                 app:cardBackgroundColor="@android:color/transparent"
-                app:cardElevation="2dp"
+                app:cardElevation="0dp"
                 app:strokeWidth="0dp"
-                app:cardCornerRadius="12dp">
+                app:cardCornerRadius="20dp">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@drawable/bg_promo_card"
-                    android:padding="16dp">
+                    android:padding="20dp">
 
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentStart="true"
-                        android:layout_alignParentTop="true"
-                        android:layout_alignParentBottom="true"
-                        android:layout_marginStart="12dp"
-                        android:layout_marginTop="12dp"
-                        android:layout_marginBottom="12dp"
+                        android:layout_centerVertical="true"
                         android:orientation="vertical">
 
                         <TextView
@@ -181,16 +214,17 @@
                             android:layout_height="wrap_content"
                             android:text="Good Morning"
                             android:textColor="@color/teal_bg"
-                            android:textSize="18sp"
+                            android:textSize="20sp"
                             android:textStyle="bold" />
 
                         <TextView
-                            android:layout_width="wrap_content"
+                            android:layout_width="220dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
+                            android:layout_marginTop="4dp"
                             android:text="Don’t forget to use sunscreen and re-apply it every 3 hours"
-                            android:textColor="#88000000"
-                            android:textSize="12sp" />
+                            android:textColor="#99000000"
+                            android:textSize="12sp"
+                            android:lineSpacingExtra="2dp"/>
                     </LinearLayout>
 
                 </RelativeLayout>
@@ -203,37 +237,51 @@
                 android:layout_height="wrap_content"
                 android:columnCount="2"
                 android:rowCount="2"
-                android:padding="9dp"
-                android:paddingBottom="0dp">
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="8dp">
 
                 <!-- Skin -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/qaSkin"
                     android:layout_width="0dp"
-                    android:layout_height="100dp"
+                    android:layout_height="110dp"
                     android:layout_margin="8dp"
                     android:layout_columnWeight="1"
                     app:cardBackgroundColor="@android:color/white"
-                    app:cardElevation="2dp"
-                    app:strokeColor="@color/input_border"
-                    app:strokeWidth="1dp">
+                    app:cardElevation="3dp"
+                    app:strokeColor="#F5F5F5"
+                    app:strokeWidth="1dp"
+                    app:cardCornerRadius="20dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:orientation="vertical"
-                        android:gravity="center">
+                        android:gravity="center"
+                        android:padding="12dp">
 
-                        <ImageView
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:src="@drawable/ic_skin"/>
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            app:cardCornerRadius="14dp"
+                            app:cardElevation="0dp"
+                            app:cardBackgroundColor="#F0FAFA">
+                            
+                            <ImageView
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:padding="10dp"
+                                android:src="@drawable/ic_skin"
+                                app:tint="@color/teal_bg"/>
+                        </com.google.android.material.card.MaterialCardView>
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
+                            android:layout_marginTop="10dp"
                             android:text="Skin Health"
-                            android:textSize="13sp"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
                             android:textColor="@color/black"/>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -242,30 +290,44 @@
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/qaEye"
                     android:layout_width="0dp"
-                    android:layout_height="100dp"
+                    android:layout_height="110dp"
                     android:layout_margin="8dp"
                     android:layout_columnWeight="1"
                     app:cardBackgroundColor="@android:color/white"
-                    app:cardElevation="2dp"
-                    app:strokeColor="@color/input_border"
-                    app:strokeWidth="1dp">
+                    app:cardElevation="3dp"
+                    app:strokeColor="#F5F5F5"
+                    app:strokeWidth="1dp"
+                    app:cardCornerRadius="20dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:orientation="vertical"
-                        android:gravity="center">
+                        android:gravity="center"
+                        android:padding="12dp">
 
-                        <ImageView
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:src="@drawable/ic_eye"/>
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            app:cardCornerRadius="14dp"
+                            app:cardElevation="0dp"
+                            app:cardBackgroundColor="#FDF5F5">
+                            
+                            <ImageView
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:padding="10dp"
+                                android:src="@drawable/ic_eye"
+                                app:tint="#E57373"/>
+                        </com.google.android.material.card.MaterialCardView>
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Quick Eye Check"
-                            android:textSize="13sp"
+                            android:layout_marginTop="10dp"
+                            android:text="Eye Check"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
                             android:textColor="@color/black"/>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -274,30 +336,44 @@
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/qaStress"
                     android:layout_width="0dp"
-                    android:layout_height="100dp"
+                    android:layout_height="110dp"
                     android:layout_margin="8dp"
                     android:layout_columnWeight="1"
                     app:cardBackgroundColor="@android:color/white"
-                    app:cardElevation="2dp"
-                    app:strokeColor="@color/input_border"
-                    app:strokeWidth="1dp">
+                    app:cardElevation="3dp"
+                    app:strokeColor="#F5F5F5"
+                    app:strokeWidth="1dp"
+                    app:cardCornerRadius="20dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:orientation="vertical"
-                        android:gravity="center">
+                        android:gravity="center"
+                        android:padding="12dp">
 
-                        <ImageView
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:src="@drawable/ic_mood"/>
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            app:cardCornerRadius="14dp"
+                            app:cardElevation="0dp"
+                            app:cardBackgroundColor="#F5F0FA">
+                            
+                            <ImageView
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:padding="10dp"
+                                android:src="@drawable/ic_mood"
+                                app:tint="#9575CD"/>
+                        </com.google.android.material.card.MaterialCardView>
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Mood Check"
-                            android:textSize="13sp"
+                            android:layout_marginTop="10dp"
+                            android:text="Mood Scan"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
                             android:textColor="@color/black"/>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -306,30 +382,44 @@
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/qaFullFace"
                     android:layout_width="0dp"
-                    android:layout_height="100dp"
+                    android:layout_height="110dp"
                     android:layout_margin="8dp"
                     android:layout_columnWeight="1"
                     app:cardBackgroundColor="@android:color/white"
-                    app:cardElevation="2dp"
-                    app:strokeColor="@color/input_border"
-                    app:strokeWidth="1dp">
+                    app:cardElevation="3dp"
+                    app:strokeColor="#F5F5F5"
+                    app:strokeWidth="1dp"
+                    app:cardCornerRadius="20dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:orientation="vertical"
-                        android:gravity="center">
+                        android:gravity="center"
+                        android:padding="12dp">
 
-                        <ImageView
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:src="@drawable/ic_fullface"/>
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            app:cardCornerRadius="14dp"
+                            app:cardElevation="0dp"
+                            app:cardBackgroundColor="#FEF9E7">
+                            
+                            <ImageView
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:padding="10dp"
+                                android:src="@drawable/ic_fullface"
+                                app:tint="#F4D03F"/>
+                        </com.google.android.material.card.MaterialCardView>
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Full Face Scan"
-                            android:textSize="13sp"
+                            android:layout_marginTop="10dp"
+                            android:text="Full Face"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
                             android:textColor="@color/black"/>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>

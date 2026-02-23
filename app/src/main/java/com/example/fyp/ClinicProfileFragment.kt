@@ -9,6 +9,10 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.example.fyp.utils.SessionManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -16,6 +20,14 @@ class ClinicProfileFragment : Fragment() {
 
     private val auth by lazy { FirebaseAuth.getInstance() }
     private val db by lazy { FirebaseFirestore.getInstance() }
+    private val sessionManager by lazy { SessionManager(requireContext()) }
+    private val googleClient by lazy {
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+        GoogleSignIn.getClient(requireActivity(), gso)
+    }
 
     private var tvName: TextView? = null
     private var tvEmail: TextView? = null
@@ -107,13 +119,28 @@ class ClinicProfileFragment : Fragment() {
     }
 
     private fun doLogout() {
+        // 1. Clear session
+        sessionManager.clearSession()
+
+        // 2. Auth signOut
         auth.signOut()
 
+        // 3. Google signOut + revoke
+        googleClient.signOut().addOnCompleteListener {
+            googleClient.revokeAccess().addOnCompleteListener {
+                navigateToLogin()
+            }
+        }.addOnFailureListener {
+            navigateToLogin()
+        }
+    }
+
+    private fun navigateToLogin() {
+        if (!isAdded) return
         val intent = Intent(requireContext(), LoginActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         }
         startActivity(intent)
-
         requireActivity().finish()
     }
 

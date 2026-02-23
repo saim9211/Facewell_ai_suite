@@ -15,18 +15,18 @@
         <!-- Header -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:background="@android:color/white"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp">
+            android:layout_height="80dp"
+            android:background="@drawable/bg_home_header_round"
+            android:paddingHorizontal="16dp">
 
             <ImageButton
                 android:id="@+id/btnBack"
-                android:layout_width="36dp"
-                android:layout_height="match_parent"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="start|center_vertical"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/back_arrow"
-                app:tint="@color/black" />
+                app:tint="@color/white" />
 
             <TextView
                 android:id="@+id/tvReportTitle"
@@ -35,8 +35,8 @@
                 android:layout_gravity="center"
                 android:text="Full Face Scan Report"
                 android:textStyle="bold"
-                android:textColor="@color/teal_bg"
-                android:textSize="18sp"/>
+                android:textColor="@color/white"
+                android:textSize="20sp"/>
         </FrameLayout>
 
         <ScrollView
@@ -54,9 +54,12 @@
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="280dp"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="2dp"
-                    android:layout_marginBottom="12dp">
+                    app:cardCornerRadius="24dp"
+                    app:cardElevation="4dp"
+                    app:strokeWidth="0dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="24dp"
+                    android:layout_marginHorizontal="2dp">
 
                     <ImageView
                         android:id="@+id/ivPreview"
@@ -66,13 +69,26 @@
                 </com.google.android.material.card.MaterialCardView>
 
                 <!-- SKIN SECTION -->
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Skin Scan"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/black"/>
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+                    
+                    <View
+                        android:layout_width="4dp"
+                        android:layout_height="20dp"
+                        android:background="@color/teal_bg" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Skin Scan"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"
+                        android:layout_marginStart="8dp"/>
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/tvSkinLabel"
@@ -81,8 +97,9 @@
                     android:text="Normal"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    android:textColor="@color/text_muted"
-                    android:layout_marginTop="4dp"/>
+                    android:textColor="@color/teal_bg"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginStart="12dp"/>
 
                 <TextView
                     android:id="@+id/tvSkinAcc"
@@ -91,35 +108,39 @@
                     android:text="Accuracy Level: 0.0%"
                     android:textSize="12sp"
                     android:textColor="@color/text_muted"
-                    android:layout_marginTop="2dp"/>
+                    android:layout_marginTop="2dp"
+                    android:layout_marginStart="12dp"/>
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvSkinPatches"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="12dp"
                     android:overScrollMode="never"/>
 
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    app:cardCornerRadius="10dp"
-                    app:strokeWidth="0dp"
+                    android:layout_marginTop="12dp"
+                    app:cardCornerRadius="20dp"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#F0F0F0"
                     app:cardElevation="2dp"
-                    app:cardBackgroundColor="@color/input_fill">
+                    app:cardBackgroundColor="@color/input_fill"
+                    android:layout_marginHorizontal="2dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="12dp">
+                        android:padding="16dp">
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Recommended care"
                             android:textStyle="bold"
+                            android:textSize="14sp"
                             android:textColor="@color/teal_bg"/>
 
                         <TextView
@@ -127,27 +148,40 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:textColor="@color/text_muted"
-                            android:layout_marginTop="6dp"/>
+                            android:textSize="13sp"
+                            android:layout_marginTop="8dp"/>
 
                         <LinearLayout
                             android:id="@+id/llSkinTips"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:layout_marginTop="8dp"/>
+                            android:layout_marginTop="12dp"/>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- EYE SECTION spacing -->
-                <View android:layout_width="match_parent" android:layout_height="12dp"/>
-
-                <TextView
+                <!-- EYE SECTION -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Eye Scan"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/black"/>
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="24dp">
+                    
+                    <View
+                        android:layout_width="4dp"
+                        android:layout_height="20dp"
+                        android:background="@color/teal_bg" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Eye Scan"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"
+                        android:layout_marginStart="8dp"/>
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/tvEyeLabel"
@@ -156,8 +190,9 @@
                     android:text="Not detected"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    android:textColor="@color/text_muted"
-                    android:layout_marginTop="4dp"/>
+                    android:textColor="@color/teal_bg"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginStart="12dp"/>
 
                 <TextView
                     android:id="@+id/tvEyeAcc"
@@ -166,29 +201,26 @@
                     android:text="Accuracy Level: 0.0%"
                     android:textSize="12sp"
                     android:textColor="@color/text_muted"
-                    android:layout_marginTop="2dp"/>
+                    android:layout_marginTop="2dp"
+                    android:layout_marginStart="12dp"/>
 
-                <LinearLayout
-                    android:id="@+id/llEyeTips"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginTop="6dp"/>
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/cardEyeRecommendations"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    app:cardCornerRadius="10dp"
-                    app:strokeWidth="0dp"
+                    app:cardCornerRadius="20dp"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#F0F0F0"
                     app:cardElevation="2dp"
-                    app:cardBackgroundColor="@color/input_fill">
+                    app:cardBackgroundColor="@color/input_fill"
+                    android:layout_marginHorizontal="2dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="12dp">
+                        android:padding="16dp">
 
                         <TextView
                             android:id="@+id/tvEyeRecTitle"
@@ -196,6 +228,7 @@
                             android:layout_height="wrap_content"
                             android:text="Recommended care"
                             android:textStyle="bold"
+                            android:textSize="14sp"
                             android:textColor="@color/teal_bg"/>
 
                         <TextView
@@ -203,27 +236,40 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:textColor="@color/text_muted"
-                            android:layout_marginTop="6dp"/>
+                            android:textSize="13sp"
+                            android:layout_marginTop="8dp"/>
 
                         <LinearLayout
                             android:id="@+id/llEyeTipsCard"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:layout_marginTop="8dp"/>
+                            android:layout_marginTop="12dp"/>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- MOOD SECTION spacing -->
-                <View android:layout_width="match_parent" android:layout_height="12dp"/>
-
-                <TextView
+                <!-- MOOD SECTION -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Mood Scan"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/black"/>
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="24dp">
+                    
+                    <View
+                        android:layout_width="4dp"
+                        android:layout_height="20dp"
+                        android:background="@color/teal_bg" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Mood Scan"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"
+                        android:layout_marginStart="8dp"/>
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/tvMoodLabel"
@@ -232,8 +278,9 @@
                     android:text="Neutral"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    android:textColor="@color/text_muted"
-                    android:layout_marginTop="4dp"/>
+                    android:textColor="@color/teal_bg"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginStart="12dp"/>
 
                 <TextView
                     android:id="@+id/tvMoodAcc"
@@ -242,29 +289,26 @@
                     android:text="Accuracy Level: 0.0%"
                     android:textSize="12sp"
                     android:textColor="@color/text_muted"
-                    android:layout_marginTop="2dp"/>
+                    android:layout_marginTop="2dp"
+                    android:layout_marginStart="12dp"/>
 
-                <LinearLayout
-                    android:id="@+id/llMoodTips"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginTop="6dp"/>
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/cardMoodRecommendations"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    app:cardCornerRadius="10dp"
-                    app:strokeWidth="0dp"
+                    app:cardCornerRadius="20dp"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#F0F0F0"
                     app:cardElevation="2dp"
-                    app:cardBackgroundColor="@color/input_fill">
+                    app:cardBackgroundColor="@color/input_fill"
+                    android:layout_marginHorizontal="2dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="12dp">
+                        android:padding="16dp">
 
                         <TextView
                             android:id="@+id/tvMoodRecTitle"
@@ -272,6 +316,7 @@
                             android:layout_height="wrap_content"
                             android:text="Recommended care"
                             android:textStyle="bold"
+                            android:textSize="14sp"
                             android:textColor="@color/teal_bg"/>
 
                         <TextView
@@ -279,85 +324,96 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:textColor="@color/text_muted"
-                            android:layout_marginTop="6dp"/>
+                            android:textSize="13sp"
+                            android:layout_marginTop="8dp"/>
 
                         <LinearLayout
                             android:id="@+id/llMoodTipsCard"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:layout_marginTop="8dp"/>
+                            android:layout_marginTop="12dp"/>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- ================= EYE PRODUCTS ================= -->
+                <!-- ================= PRODUCTS ================= -->
                 <TextView
                     android:id="@+id/tvEyeProductsTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Recommended Products for you"
+                    android:text="Recommended Products"
                     android:textStyle="bold"
+                    android:textSize="18sp"
                     android:textColor="@color/black"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="24dp"
                     />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvProducts"
                     android:layout_width="match_parent"
-                    android:layout_height="170dp"
-                    android:scrollbars="horizontal"/>
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:nestedScrollingEnabled="false"
+                    android:visibility="gone"/>
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnSeeMoreProducts"
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
+                    android:layout_height="54dp"
                     android:text="See More Products"
-                    android:layout_marginTop="10dp"
-                    android:textColor="@color/white"
-                    android:backgroundTint="@color/teal_bg" />
+                    android:textColor="@color/teal_bg"
+                    android:backgroundTint="@android:color/white"
+                    app:cornerRadius="16dp"
+                    app:strokeColor="@color/teal_bg"
+                    app:strokeWidth="2dp"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginBottom="16dp"
+                    android:textStyle="bold" />
 
 
                 <!-- ACTIONS -->
-                <View android:layout_width="match_parent" android:layout_height="16dp"/>
-
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnSaveReport"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="48dp"
+                        android:layout_height="54dp"
                         android:text="Save Report"
                         android:textColor="@android:color/white"
                         app:backgroundTint="@color/teal_bg"
-                        app:cornerRadius="12dp"/>
+                        app:cornerRadius="16dp"
+                        android:textStyle="bold" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnVisitClinic"
-                        android:layout_width="wrap_content"
-                        android:layout_height="48dp"
-                        android:layout_marginStart="8dp"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="54dp"
+                        android:layout_marginStart="12dp"
                         android:text="Visit Clinic"
                         android:textColor="@android:color/white"
                         app:backgroundTint="@color/teal_bg"
-                        app:cornerRadius="12dp"/>
+                        app:cornerRadius="16dp"
+                        android:textStyle="bold" />
                 </LinearLayout>
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnGoHome"
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
+                    android:layout_height="54dp"
                     android:text="Go Home"
                     android:textColor="@color/teal_bg"
                     android:backgroundTint="@android:color/white"
-                    app:cornerRadius="12dp"
+                    app:cornerRadius="16dp"
                     app:strokeColor="@color/teal_bg"
                     app:strokeWidth="2dp"
-                    android:layout_marginTop="12dp"
-                    android:layout_marginBottom="16dp"/>
+                    android:layout_marginBottom="24dp"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/tvDisclaimer"

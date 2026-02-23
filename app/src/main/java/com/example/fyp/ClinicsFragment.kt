@@ -13,9 +13,11 @@ import com.example.fyp.providers.ClinicCategory
 import com.example.fyp.providers.OsmClinicProvider
 import com.example.fyp.ui.NearbyClinicAdapter
 import com.example.fyp.ui.RegisteredClinicAdapter
+import com.example.fyp.utils.LocationHelper
 import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 
 class ClinicsFragment : Fragment(R.layout.activity_clinics_fragment) {
 
@@ -189,39 +191,69 @@ class ClinicsFragment : Fragment(R.layout.activity_clinics_fragment) {
 
         db.collection("users").document(uid).get()
             .addOnSuccessListener { doc ->
-                val lat =
-                    doc.getDouble("lat")
-                        ?: (doc.get("location") as? Map<*, *>)?.get("lat") as? Double
-                val lon =
-                    doc.getDouble("lon")
-                        ?: (doc.get("location") as? Map<*, *>)?.get("lng") as? Double
-
-                if (lat == null || lon == null) {
+                val isLocationEnabled = doc.getBoolean("locationEnabled") ?: false
+                if (!isLocationEnabled) {
                     swipe.isRefreshing = false
                     empty.visibility = View.VISIBLE
-                    empty.text = "Enable location to find nearby clinics."
+                    empty.text = "Enable location in Profile to find nearby clinics."
+                    nearbyAdapter.update(listOf())
                     return@addOnSuccessListener
                 }
 
-                osmProvider.searchClinics(lat, lon, 20000, ClinicCategory.EYE) { list ->
-                    requireActivity().runOnUiThread {
-                        swipe.isRefreshing = false
-
-                        if (list.isNullOrEmpty()) {
-                            empty.visibility = View.VISIBLE
-                            empty.text = "No clinics found near you."
-                            nearbyAdapter.update(listOf())
+                // If enabled, try real-time location first
+                if (LocationHelper.hasLocationPermission(requireContext())) {
+                    LocationHelper.getLastLocation(requireActivity(), onSuccess = { loc ->
+                        if (loc != null) {
+                            // Update Firestore with new real-time coords
+                            val updates = mapOf("location" to mapOf("lat" to loc.latitude, "lng" to loc.longitude))
+                            db.collection("users").document(uid).set(updates, SetOptions.merge())
+                            searchWithCoords(loc.latitude, loc.longitude)
                         } else {
-                            empty.visibility = View.GONE
-                            nearbyAdapter.update(list)
+                            // fallback to saved
+                            useSavedLocation(doc)
                         }
-                    }
+                    }, onFailure = {
+                        useSavedLocation(doc)
+                    })
+                } else {
+                    // No permission, use saved coordinates
+                    useSavedLocation(doc)
                 }
             }
             .addOnFailureListener {
                 swipe.isRefreshing = false
                 empty.visibility = View.VISIBLE
-                empty.text = "Failed to load location."
+                empty.text = "Failed to load user profile."
             }
+    }
+
+    private fun useSavedLocation(doc: com.google.firebase.firestore.DocumentSnapshot) {
+        val lat = (doc.get("location") as? Map<*, *>)?.get("lat") as? Double
+        val lon = (doc.get("location") as? Map<*, *>)?.get("lng") as? Double
+
+        if (lat == null || lon == null) {
+            swipe.isRefreshing = false
+            empty.visibility = View.VISIBLE
+            empty.text = "Location not found. Enable it in Profile."
+            nearbyAdapter.update(listOf())
+        } else {
+            searchWithCoords(lat, lon)
+        }
+    }
+
+    private fun searchWithCoords(lat: Double, lon: Double) {
+        osmProvider.searchClinics(lat, lon, 20000, ClinicCategory.ALL) { list ->
+            requireActivity().runOnUiThread {
+                swipe.isRefreshing = false
+                if (list.isNullOrEmpty()) {
+                    empty.visibility = View.VISIBLE
+                    empty.text = "No clinics found near you."
+                    nearbyAdapter.update(listOf())
+                } else {
+                    empty.visibility = View.GONE
+                    nearbyAdapter.update(list)
+                }
+            }
+        }
     }
 }

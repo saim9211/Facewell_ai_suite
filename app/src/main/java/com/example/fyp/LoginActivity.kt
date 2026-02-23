@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import com.example.fyp.utils.SessionManager
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -41,6 +42,7 @@ class LoginActivity : AppCompatActivity() {
 
     // Firebase
     private lateinit var auth: FirebaseAuth
+    private lateinit var sessionManager: SessionManager
     private val db by lazy { FirebaseFirestore.getInstance() }
 
     // Google (legacy GSI; works but deprecated)
@@ -52,6 +54,8 @@ class LoginActivity : AppCompatActivity() {
         setContentView(R.layout.activity_login)
 
         auth = FirebaseAuth.getInstance()
+        sessionManager = SessionManager(this)
+        
         bindViews()
         initGoogleSignIn()
         setupLiveValidation()
@@ -123,6 +127,9 @@ class LoginActivity : AppCompatActivity() {
         auth.signInWithEmailAndPassword(email, pass)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
+                    // Save session timestamp locally for 15-day check
+                    sessionManager.saveLoginSession()
+                    
                     // Stage-based routing after successful login
                     goNextByStage()
                 } else {
@@ -165,11 +172,12 @@ class LoginActivity : AppCompatActivity() {
 
     private fun startGoogleLogin() {
         showLoading(true)
-        // To force account chooser we sign out only at Google client level.
-        // DO NOT sign out Firebase here (removing auth.signOut() prevents random global logouts).
+        // To force account chooser we sign out AND revoke access at Google client level.
         googleClient.signOut().addOnCompleteListener {
-            // launch chooser
-            googleLauncher.launch(googleClient.signInIntent)
+            googleClient.revokeAccess().addOnCompleteListener {
+                // launch chooser
+                googleLauncher.launch(googleClient.signInIntent)
+            }
         }.addOnFailureListener {
             // still launch sign-in intent even if signOut fails
             googleLauncher.launch(googleClient.signInIntent)
@@ -187,6 +195,9 @@ class LoginActivity : AppCompatActivity() {
                         Toast.makeText(this, "Login failed. Try again.", Toast.LENGTH_LONG).show()
                         return@addOnCompleteListener
                     }
+
+                    // Save session timestamp locally for 15-day check
+                    sessionManager.saveLoginSession()
 
                     // After Firebase sign-in, look for user's document
                     db.collection("users").document(uid)

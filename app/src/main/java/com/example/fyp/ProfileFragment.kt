@@ -7,6 +7,7 @@ import android.location.Location
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
@@ -16,6 +17,10 @@ import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.example.fyp.utils.LocationHelper
 import com.example.fyp.utils.NetworkUtils
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.example.fyp.utils.SessionManager
 import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
@@ -31,10 +36,18 @@ class ProfileFragment : Fragment(R.layout.activity_profile_fragment) {
     private lateinit var tvDob: TextView
     private lateinit var tvGender: TextView
     private lateinit var ivAvatar: ImageView
-    private lateinit var btnToggleLocation: MaterialButton
+    private lateinit var switchLocation: com.google.android.material.switchmaterial.SwitchMaterial
 
     private val auth by lazy { FirebaseAuth.getInstance() }
     private val db by lazy { FirebaseFirestore.getInstance() }
+    private val sessionManager by lazy { SessionManager(requireContext()) }
+    private val googleClient by lazy {
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+        GoogleSignIn.getClient(requireActivity(), gso)
+    }
 
     // keep a lightweight holder for the fetched user data (map-like)
     private var currentUserData: Map<String, String>? = null
@@ -65,12 +78,12 @@ class ProfileFragment : Fragment(R.layout.activity_profile_fragment) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        tvFirst  = view.findViewById(R.id.tvFirst)
-        tvLast   = view.findViewById(R.id.tvLast)
-        tvDob    = view.findViewById(R.id.tvDob)
+        tvFirst = view.findViewById(R.id.tvFirst)
+        tvLast = view.findViewById(R.id.tvLast)
+        tvDob = view.findViewById(R.id.tvDob)
         tvGender = view.findViewById(R.id.tvGender)
         ivAvatar = view.findViewById(R.id.ivAvatar)
-//        btnToggleLocation = view.findViewById(R.id.btnToggleLocation)
+        switchLocation = view.findViewById(R.id.switchLocation)
 
         // NEW EDIT BUTTON -> open the standalone EditProfileActivity
         view.findViewById<View>(R.id.btnEditProfile).setOnClickListener {
@@ -99,30 +112,17 @@ class ProfileFragment : Fragment(R.layout.activity_profile_fragment) {
             showLogoutDialog()
         }
 
-        // Toggle location button handling
-//        btnToggleLocation.setOnClickListener {
-//            val uid = auth.currentUser?.uid ?: return@setOnClickListener
-//            // Check current state: if user doc has location -> disabling, else enabling
-//            val hasLocation = try {
-//                val map = currentUserData
-//                map != null && map.containsKey("location_lat") // not guaranteed; fallback below
-//            } catch (_: Exception) { false }
-//
-//            // Better: fetch fresh doc to be certain
-//            db.collection("users").document(uid).get().addOnSuccessListener { doc ->
-//                val locObj = doc.get("location")
-//                if (locObj == null) {
-//                    // enable location flow -> request permission then fetch
-//                    requestLocationPermissionOrFetch()
-//                } else {
-//                    // disable location flow -> remove field
-//                    confirmAndRemoveLocation()
-//                }
-//            }.addOnFailureListener {
-//                // fallback: try permission path
-//                requestLocationPermissionOrFetch()
-//            }
-//        }
+        // Toggle location switch handling
+        switchLocation.setOnCheckedChangeListener { _, isChecked ->
+            // If the change came from user (not programmatic), trigger logic
+            if (switchLocation.isPressed) {
+                if (isChecked) {
+                    requestLocationPermissionOrFetch()
+                } else {
+                    confirmAndRemoveLocation()
+                }
+            }
+        }
 
         fetchUser()
     }
@@ -145,7 +145,12 @@ class ProfileFragment : Fragment(R.layout.activity_profile_fragment) {
             return
         }
         // else request permissions (will call permissionLauncher)
-        permissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION))
+        permissionLauncher.launch(
+            arrayOf(
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )
+        )
     }
 
     private fun fetchLocationAndSaveToUser() {
@@ -162,9 +167,13 @@ class ProfileFragment : Fragment(R.layout.activity_profile_fragment) {
                 dlg.dismiss()
                 if (loc == null) {
                     showToastShort("Unable to obtain location.")
+                    switchLocation.isChecked = false
                     return@getLastLocation
                 }
-                val payload = mapOf("location" to mapOf("lat" to loc.latitude, "lng" to loc.longitude))
+                val payload = mapOf(
+                    "location" to mapOf("lat" to loc.latitude, "lng" to loc.longitude),
+                    "locationEnabled" to true
+                )
                 db.collection("users").document(uid)
                     .set(payload, SetOptions.merge())
                     .addOnSuccessListener {
@@ -180,6 +189,7 @@ class ProfileFragment : Fragment(R.layout.activity_profile_fragment) {
             },
             onFailure = { ex ->
                 dlg.dismiss()
+                switchLocation.isChecked = false
                 Log.e(TAG, "LocationHelper failed", ex)
                 showToastShort("Location error")
             })
@@ -187,31 +197,58 @@ class ProfileFragment : Fragment(R.layout.activity_profile_fragment) {
 
     private fun confirmAndRemoveLocation() {
         val uid = auth.currentUser?.uid ?: return
-        AlertDialog.Builder(requireContext())
-            .setTitle("Disable location")
-            .setMessage("Are you sure you want to remove saved location? App will ask for location again next time.")
-            .setPositiveButton("Remove") { _, _ ->
-                // remove 'location' field from user doc
+        val dialogView =
+            LayoutInflater.from(requireContext()).inflate(R.layout.dialog_location_disable, null)
+        val dlg =
+            androidx.appcompat.app.AlertDialog.Builder(requireContext(), R.style.CustomDialogTheme)
+                .setView(dialogView)
+                .setCancelable(false)
+                .create()
+
+        dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnConfirm)
+            .setOnClickListener {
+                dlg.dismiss()
+                // set 'locationEnabled' to false and remove 'location' coordinates
+                val updates = hashMapOf<String, Any>(
+                    "locationEnabled" to false,
+                    "location" to com.google.firebase.firestore.FieldValue.delete()
+                )
                 db.collection("users").document(uid)
-                    .update("location", FieldValue.delete())
+                    .update(updates)
                     .addOnSuccessListener {
-                        showToastShort("Location removed")
+                        showToastShort("Location disabled")
                         fetchUserAndBroadcast()
                     }
                     .addOnFailureListener { e ->
                         Log.e(TAG, "Failed remove location", e)
                         // fallback: set location to null (merge)
                         db.collection("users").document(uid)
-                            .set(mapOf("location" to null), SetOptions.merge())
+                            .set(
+                                mapOf("location" to null, "locationEnabled" to false),
+                                com.google.firebase.firestore.SetOptions.merge()
+                            )
                             .addOnSuccessListener {
-                                showToastShort("Location removed")
+                                showToastShort("Location disabled")
                                 fetchUserAndBroadcast()
                             }
-                            .addOnFailureListener { ex -> Log.e(TAG, "remove fallback failed", ex); showToastShort("Failed to remove location") }
+                            .addOnFailureListener { ex ->
+                                Log.e(
+                                    TAG,
+                                    "remove fallback failed",
+                                    ex
+                                ); showToastShort("Failed to disable location")
+                            }
                     }
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+
+        dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnCancel)
+            .setOnClickListener {
+                dlg.dismiss()
+                switchLocation.isChecked = true
+            }
+
+        dlg.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+        dlg.show()
     }
 
     private fun fetchUserAndBroadcast() {
@@ -267,7 +304,10 @@ class ProfileFragment : Fragment(R.layout.activity_profile_fragment) {
             }
     }
 
-    private fun snapToMap(uid: String, doc: com.google.firebase.firestore.DocumentSnapshot): Map<String, String> {
+    private fun snapToMap(
+        uid: String,
+        doc: com.google.firebase.firestore.DocumentSnapshot
+    ): Map<String, String> {
         val locationObj = doc.get("location")
         // flatten small location flags for UI convenience (not required)
         val locationLat = when (val v = (locationObj as? Map<*, *>)?.get("lat")) {
@@ -283,14 +323,15 @@ class ProfileFragment : Fragment(R.layout.activity_profile_fragment) {
         return mapOf(
             "uid" to uid,
             "firstName" to (doc.getString("firstName") ?: ""),
-            "lastName"  to (doc.getString("lastName") ?: ""),
-            "city"      to (doc.getString("city") ?: ""),
-            "dob"       to (doc.getString("dob") ?: ""),
-            "gender"    to (doc.getString("gender") ?: ""),
-            "email"     to (auth.currentUser?.email ?: (doc.getString("email") ?: "")),
-            "phone"     to (doc.getString("phone") ?: ""),
-            "avatar"    to (doc.getString("avatar") ?: "ic_profile"),
-            "stage"     to (doc.getLong("stage")?.toString() ?: "0"),
+            "lastName" to (doc.getString("lastName") ?: ""),
+            "city" to (doc.getString("city") ?: ""),
+            "dob" to (doc.getString("dob") ?: ""),
+            "gender" to (doc.getString("gender") ?: ""),
+            "email" to (auth.currentUser?.email ?: (doc.getString("email") ?: "")),
+            "phone" to (doc.getString("phone") ?: ""),
+            "avatar" to (doc.getString("avatar") ?: "ic_profile"),
+            "stage" to (doc.getLong("stage")?.toString() ?: "0"),
+            "locationEnabled" to (doc.getBoolean("locationEnabled")?.toString() ?: "false"),
             "location_lat" to locationLat,
             "location_lng" to locationLng
         )
@@ -298,8 +339,8 @@ class ProfileFragment : Fragment(R.layout.activity_profile_fragment) {
 
     private fun bindUserToUiFromMap(data: Map<String, String>) {
         tvFirst.text = data["firstName"] ?: ""
-        tvLast.text  = data["lastName"] ?: ""
-        tvDob.text   = data["dob"] ?: ""
+        tvLast.text = data["lastName"] ?: ""
+        tvDob.text = data["dob"] ?: ""
 
         // --- FIX GENDER TEXT (remove underscores, proper spacing, title case) ---
         val genderRaw = (data["gender"] ?: "").replace('_', ' ').trim()
@@ -318,22 +359,13 @@ class ProfileFragment : Fragment(R.layout.activity_profile_fragment) {
             "avatar2" -> R.drawable.avatar2
             "avatar3" -> R.drawable.avatar3
             "avatar4" -> R.drawable.avatar4
-            else      -> R.drawable.ic_profile
+            else -> R.drawable.ic_profile
         }
         ivAvatar.setImageResource(avatarRes)
 
-        // Update toggle button text based on presence of location
-        val hasLocation = !(data["location_lat"].isNullOrBlank() || data["location_lng"].isNullOrBlank())
-//        if (hasLocation) {
-//            btnToggleLocation.text = "Disable Location"
-//            btnToggleLocation.setTextColor(resources.getColor(R.color.red))
-//            btnToggleLocation.setBackgroundColor(resources.getColor(R.color.input_fill))
-//            btnToggleLocation.strokeColor = null // keep thin style
-//        } else {
-//            btnToggleLocation.text = "Enable Location"
-//            btnToggleLocation.setTextColor(resources.getColor(R.color.teal_bg))
-//            btnToggleLocation.setBackgroundColor(resources.getColor(R.color.white))
-//        }
+        // Update toggle switch state based on locationEnabled flag
+        val isEnabled = data["locationEnabled"] == "true"
+        switchLocation.isChecked = isEnabled
     }
 
     private fun showLogoutDialog() {
@@ -351,13 +383,28 @@ class ProfileFragment : Fragment(R.layout.activity_profile_fragment) {
     }
 
     private fun doLogout() {
-        FirebaseAuth.getInstance().signOut()
+        // 1. Clear 15-day session
+        sessionManager.clearSession()
 
+        // 2. Sign out from Firebase
+        auth.signOut()
+
+        // 3. Sign out and revoke Google access (always show chooser next time)
+        googleClient.signOut().addOnCompleteListener {
+            googleClient.revokeAccess().addOnCompleteListener {
+                navigateToLogin()
+            }
+        }.addOnFailureListener {
+            navigateToLogin()
+        }
+    }
+
+    private fun navigateToLogin() {
+        if (!isAdded) return
         val intent = Intent(requireContext(), LoginActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         }
         startActivity(intent)
-
         requireActivity().finish()
     }
 
@@ -376,6 +423,10 @@ class ProfileFragment : Fragment(R.layout.activity_profile_fragment) {
     }
 
     private fun showToastShort(msg: String) {
-        try { android.widget.Toast.makeText(requireContext(), msg, android.widget.Toast.LENGTH_SHORT).show() } catch (_: Exception) {}
+        try {
+            android.widget.Toast.makeText(requireContext(), msg, android.widget.Toast.LENGTH_SHORT)
+                .show()
+        } catch (_: Exception) {
+        }
     }
 }

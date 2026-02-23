@@ -52,22 +52,27 @@ class OsmClinicProvider : ClinicProvider {
             "relation(around:$radiusMeters,$lat,$lng)[amenity=clinic];"
         )
 
-        // Combine clauses: core + category-specific (all separate clauses inside the (...) group)
-        val allClauses = (coreClauses + categoryClauses).joinToString(separator = "\n  ")
+        // Combine clauses: category-specific
+        val catClauses = categoryClauses.joinToString(separator = "\n  ")
 
         val rawQuery = """
             [out:json][timeout:25];
             (
-              $allClauses
+              node(around:$radiusMeters,$lat,$lng)["amenity"~"clinic|hospital|doctors"];
+              node(around:$radiusMeters,$lat,$lng)["healthcare"~"clinic|hospital|doctor"];
+              way(around:$radiusMeters,$lat,$lng)["amenity"~"clinic|hospital|doctors"];
+              way(around:$radiusMeters,$lat,$lng)["healthcare"~"clinic|hospital|doctor"];
+              $catClauses
             );
             out center tags;
         """.trimIndent()
 
-        // Encode as GET ?data=... (matches browser)
+        // Encode and log the final query
         val encoded = try { URLEncoder.encode(rawQuery, "UTF-8") } catch (e: Exception) { rawQuery }
         val url = "$overpassBase?data=$encoded"
 
-        Log.d(TAG, "Overpass GET URL (preview): ${url.take(400)}")
+        Log.d(TAG, "Search Clinics - lat: $lat, lng: $lng, radius: $radiusMeters, cat: $category")
+        Log.d(TAG, "Overpass Query: $rawQuery")
 
         val req = Request.Builder().url(url).get().build()
 
@@ -98,8 +103,9 @@ class OsmClinicProvider : ClinicProvider {
                         try {
                             val over = gson.fromJson(bodyTxt, OverpassResponse::class.java)
                             val elems = over.elements ?: emptyList()
+                            Log.d(TAG, "Overpass elements found: ${elems.size}")
                             if (elems.isEmpty()) {
-                                Log.d(TAG, "Overpass returned zero elements")
+                                Log.d(TAG, "Overpass returned zero elements for this area.")
                                 cb(emptyList())
                                 return
                             }

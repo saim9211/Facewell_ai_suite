@@ -38,7 +38,7 @@ class SearchProductAdapter(
         h.cat.text = p.category
         h.price.text = "PKR ${p.price ?: 0}"
 
-        h.rating.text = p.avgRating.toString()
+        h.rating.text = String.format("%.1f", p.avgRating)
         h.ratingCount.text = "(${p.ratingsCount})"
 
         val imageUrl = p.images.firstOrNull()

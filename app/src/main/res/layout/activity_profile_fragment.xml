@@ -160,23 +160,44 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Location toggle button (matches app button style) -->
-<!--        <com.google.android.material.button.MaterialButton-->
-<!--            android:id="@+id/btnToggleLocation"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="56dp"-->
-<!--            android:layout_marginStart="16dp"-->
-<!--            android:layout_marginEnd="16dp"-->
-<!--            android:layout_marginTop="8dp"-->
-<!--            android:layout_marginBottom="12dp"-->
-<!--            android:text="Enable Location"-->
-<!--            android:textAllCaps="false"-->
-<!--            android:textStyle="bold"-->
-<!--            app:cornerRadius="12dp"-->
-<!--            app:backgroundTint="@color/white"-->
-<!--            app:strokeColor="@color/teal_bg"-->
-<!--            app:strokeWidth="2dp"-->
-<!--            android:textColor="@color/teal_bg" />-->
+        <!-- Location Toggle Row -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="12dp"
+            app:cardBackgroundColor="@color/input_fill"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Real-time Location"
+                    android:textColor="@color/black"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switchLocation"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:thumbTint="@color/teal_bg"
+                    app:trackTint="@color/teal_light" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <LinearLayout
             android:id="@+id/listOptions"

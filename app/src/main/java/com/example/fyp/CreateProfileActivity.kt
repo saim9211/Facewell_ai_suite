@@ -378,7 +378,8 @@ class CreateProfileActivity : AppCompatActivity() {
             "gender"    to genderTxt,
             "dob"       to String.format("%04d-%02d-%02d", year, monthNumber, day),
             "avatar"    to (selectedAvatar ?: "avatar1"),
-            "stage"     to 1,
+            "stage"     to 2,
+            "locationEnabled" to false,
             "profileUpdatedAt" to System.currentTimeMillis()
         )
 

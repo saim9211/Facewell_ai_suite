@@ -244,8 +244,8 @@ class VendorCreateProfileActivity : AppCompatActivity() {
             "city" to city,
             "vendorAddress" to address,
             "stage" to 2,
-            "isApproved" to false,
             "locationEnabled" to false,
+            "isApproved" to false,
             "profileUpdatedAt" to System.currentTimeMillis()
         )
 
