@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" /> <!-- Needed for Firebase/Auth/Firestore/Storage calls -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.CAMERA" /> <!-- Gallery on Android 13+ -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" /> <!-- Fallback for < 33 -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <application
+        android:name=".MyApp"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.FYP"
+        tools:targetApi="31">
+        <activity
+            android:name=".WaitingApprovalActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ProductDetailBottomSheet"
+            android:exported="false" />
+        <activity
+            android:name=".SearchProductsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".VendorEditProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".EditProductActivity"
+            android:exported="false" />
+        <activity
+            android:name=".VendorProfileFragment"
+            android:exported="false" />
+        <activity
+            android:name=".VendorListingsFragment"
+            android:exported="false" />
+        <activity
+            android:name=".VendorAddProductFragment"
+            android:exported="false" />
+        <activity
+            android:name=".VendorDashboardFragment"
+            android:exported="false" />
+        <activity
+            android:name=".ClinicEditProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".VendorMainActivity"
+            android:exported="false" />
+        <activity
+            android:name=".VendorCreateProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ClinicProfileFragment"
+            android:exported="false" />
+        <activity
+            android:name=".ClinicDashboardFragment"
+            android:exported="false" />
+        <activity
+            android:name=".ClinicMainActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ClinicCreateProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".SelectUserTypeActivity"
+            android:exported="false" />
+        <activity
+            android:name=".FullFaceReportActivity"
+            android:exported="false" />
+        <activity
+            android:name=".MoodReportActivity"
+            android:exported="false" />
+        <activity
+            android:name=".SkinReportActivity"
+            android:exported="false" />
+        <activity
+            android:name=".EditProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".EyeReportActivity"
+            android:exported="false" />
+        <activity
+            android:name=".camera.CameraCaptureActivity"
+            android:exported="false" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <activity
+            android:name=".ProfileFragment"
+            android:exported="false" />
+        <activity
+            android:name=".ReportsFragment"
+            android:exported="false" />
+        <activity
+            android:name=".ClinicsFragment"
+            android:exported="false" />
+        <activity
+            android:name=".HomeFragment"
+            android:exported="false" />
+        <activity
+            android:name=".AboutActivity"
+            android:exported="false" />
+        <activity
+            android:name=".EditProfileFragment"
+            android:exported="false" />
+        <activity
+            android:name=".ConfirmPhotoActivity"
+            android:exported="false" />
+        <activity
+            android:name=".StressCheckActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ScanEyeActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ScanSkinActivity"
+            android:exported="false" />
+        <activity
+            android:name=".CreateProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".SignupActivity"
+            android:exported="false" /> <!-- Launcher is SplashActivity -->
+        <activity
+            android:name=".SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.FYP.Splash">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity> <!-- Login screen -->
+        <activity
+            android:name=".LoginActivity"
+            android:exported="false" /> <!-- Your existing main/home screen (after successful auth) -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+    </application>
+
+</manifest>

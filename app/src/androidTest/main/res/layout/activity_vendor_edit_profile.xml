@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:paddingBottom="24dp">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- HEADER -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="180dp"
+                android:background="@drawable/bg_home_header_round"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="20dp">
+
+                <ImageButton
+                    android:id="@+id/btnBack"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/back_arrow"
+                    app:tint="@color/on_teal"/>
+
+                <TextView
+                    android:id="@+id/tvTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top|center_horizontal"
+                    android:text="Edit Vendor Profile"
+                    android:textColor="@color/on_teal"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="6dp" />
+            </FrameLayout>
+
+            <!-- Vendor Name -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilVendorName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="32dp"
+                android:layout_marginTop="16dp"
+                app:boxBackgroundColor="@color/input_fill"
+                app:boxStrokeColor="@color/input_border"
+                app:boxStrokeWidth="1dp"
+                app:hintEnabled="false"
+                app:boxCornerRadiusTopStart="20dp"
+                app:boxCornerRadiusTopEnd="20dp"
+                app:boxCornerRadiusBottomStart="20dp"
+                app:boxCornerRadiusBottomEnd="20dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etVendorName"
+                    android:layout_width="match_parent"
+                    android:layout_height="58dp"
+                    android:background="@drawable/input_field_bg"
+                    android:paddingStart="12dp"
+                    android:hint="Business Name"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/text_muted"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- City -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilCity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="32dp"
+                android:layout_marginTop="12dp"
+                app:boxBackgroundColor="@color/input_fill"
+                app:boxStrokeColor="@color/input_border"
+                app:hintEnabled="false">
+
+                <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                    android:id="@+id/etCity"
+                    android:layout_width="match_parent"
+                    android:layout_height="58dp"
+                    android:background="@drawable/input_field_bg"
+                    android:hint="City"
+                    android:paddingStart="12dp"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/text_muted"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Phone -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilPhone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="32dp"
+                android:layout_marginTop="12dp"
+                app:boxBackgroundColor="@color/input_fill"
+                app:boxStrokeColor="@color/input_border"
+                app:hintEnabled="false">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etPhone"
+                    android:layout_width="match_parent"
+                    android:layout_height="58dp"
+                    android:background="@drawable/input_field_bg"
+                    android:hint="Phone Number"
+                    android:textColor="@color/black"
+                    android:inputType="phone"
+                    android:textColorHint="@color/text_muted"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Website -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilWebsite"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="32dp"
+                android:layout_marginTop="12dp"
+                app:boxBackgroundColor="@color/input_fill"
+                app:boxStrokeColor="@color/input_border"
+                app:hintEnabled="false">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etWebsite"
+                    android:layout_width="match_parent"
+                    android:layout_height="58dp"
+                    android:background="@drawable/input_field_bg"
+                    android:hint="Website (optional)"
+                    android:textColor="@color/black"
+                    android:inputType="textUri"
+                    android:textColorHint="@color/text_muted"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- SAVE -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSave"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginHorizontal="32dp"
+                android:layout_marginTop="20dp"
+                android:text="Save Changes"
+                android:textAllCaps="false"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                app:cornerRadius="20dp"
+                app:backgroundTint="@color/teal_bg"/>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- LOADING OVERLAY -->
+    <FrameLayout
+        android:id="@+id/loadingOverlay"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#80000000"/>
+
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/progress"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center"
+            android:indeterminate="true"/>
+    </FrameLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

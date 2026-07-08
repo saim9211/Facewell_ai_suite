@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:padding="16dp">
+
+    <!-- Back button -->
+    <ImageView
+        android:id="@+id/btnBack"
+        android:src="@drawable/back_arrow"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:padding="6dp"
+        android:layout_marginBottom="12dp"/>
+
+    <!-- Search Field -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilSearch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:boxBackgroundColor="@color/input_fill"
+        app:boxStrokeWidth="1dp"
+        app:boxStrokeColor="@color/input_border"
+        app:boxCornerRadiusTopStart="16dp"
+        app:boxCornerRadiusTopEnd="16dp"
+        app:boxCornerRadiusBottomStart="16dp"
+        app:boxCornerRadiusBottomEnd="16dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etSearch"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:paddingStart="12dp"
+            android:hint="Search products..."
+            android:inputType="text"
+            android:textColor="@color/black"
+            android:textColorHint="@color/text_muted"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Category Filters -->
+    <LinearLayout
+        android:id="@+id/filtersRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="12dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnGeneral"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:layout_marginEnd="8dp"
+            android:text="All"
+            app:backgroundTint="@color/teal_light"
+            app:strokeColor="@color/teal_bg"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnEye"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:layout_marginEnd="8dp"
+            android:text="Eye"
+            app:strokeColor="@color/teal_bg"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSkin"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:layout_marginEnd="8dp"
+            android:text="Skin"
+            app:strokeColor="@color/teal_bg"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnStress"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:text="Stress"
+            app:strokeColor="@color/teal_bg"/>
+    </LinearLayout>
+
+    <!-- Swipe Refresh -->
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefresh"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvProducts"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="12dp"/>
+
+            <TextView
+                android:id="@+id/tvEmptyState"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="No products listed"
+                android:textSize="16sp"
+                android:textColor="@color/text_muted"
+                android:layout_gravity="center"
+                android:visibility="gone"/>
+
+        </FrameLayout>
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+</LinearLayout>
